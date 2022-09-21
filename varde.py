@@ -23,15 +23,24 @@ def main():
         chain_column = worksheet["E"]
         store_column = worksheet["F"]
         value_column = worksheet["G"]
-        for i in zip(region_column[1:], chain_column[1:], store_column[1:], value_column[1:]):
-            for j in i:
-                print(str(j.value).encode('utf-8'))
+        
+        return zip(region_column[1:], chain_column[1:], store_column[1:], value_column[1:])
 
-    value_dict = defaultdict(dict)
+
+    value_dict = defaultdict()
     
-    read_file()
-
-
+    zipped = read_file()
+    # for i, j, k, l in zipped:
+    #     print(i.value.encode("utf-8"), j.value.encode("utf-8"), k.value.encode("utf-8"), l.value)
+        
+    
+    for i, j, k, l in zipped:
+        if i.value:
+            value_dict[i.value.encode("utf-8")] = defaultdict
+            
+    for item in value_dict:
+        print(item)
+        
 
 if __name__ == '__main__':
     main()
