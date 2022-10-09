@@ -13,19 +13,28 @@ med databasen skall vara att kunna ta fram budget data och inte bara statistik f
 Databas för topup:
 Detta känns spontant som den svårare av de två databaserna att fixa på ett snyggt sätt. 
 
-Jag tror jag vill utgå från en tabell med nummer som har attributerna MSISDN, butiksID, totalt laddningsvärde, topup datum. 
+Jag behöver ju till exempel lista ut hur vi löser det faktum att flera topups kommer ske på samma nummer vid olika tillfällen. Lägger jag enbart värdet på hög 
+finns det inget sätt att kolla vilket värde ett visst nummer akumelerat under en given tidsperiod. Det är ett problem. 
+
+Kanske jag behöver en till tabell för varje 
+enskild topup? Kanske det skall vara huvudtabellen i denna databasen? Eller vill vi länka MSISDN tabellen till topup tabellen? Hur blir det bäst strukturerat? Vilka problem 
+finns med de två olika alternativen? 
+
+problem för topup primär tabell;
+Blir en otrolig mängd tabeller att gräva sig nedåt i för att få fram all data. Men fördelen är att jag tror strukturen egentlien är mycket simplare att bygga och 
+få ut relevant information ifrån. Om programmet behöver mer tid på sig kanske det är något man får leva med? 
+
+
+problem för MSISDN primär tabell;
+Hur strukturerar vi topups på ett bra sätt? Om vi har att varje enskilt nummer ska hålla koll på vilka topups de har gjort blir det nog svårt faktiskt. Även om vi utgår 
+från att varje topup har ett unikt ID så hade tabellen behövt akommendera olika mängd topupIDs för varje nummer och att varje nummer skall kunna lägga till fler och fler
+topUPs över tid. Tror nog att det bästa alternativet blir en topup tabell som huvudtabell...
 
 
 databas för aktiveringar:
-Denna känns spontant enklare. Varje nummer som aktiveras läggs till i en tabell. Varje enskilt record har bara tre attributes. nummer + butiksID + datum aktiverat. 
+Denna känns spontant enklare. Varje nummer som aktiveras läggs till i en tabell. tabellen har tre attribut. nummer, butiksnamn och datum aktiverat. 
 
-butiksID kopplar till en separat tabell med butiksID, butiks namn och regionsID. Byter en butik region behöver man bara byta 
-regionsID och det kopplas sedan till rätt namn och account manager. 
+butiksnamnet kan vara foreign key för en butikstabell. den tabellen har koll på region, address kanske. 
 
-RegionsID kopplas sedan till sin egna separata tabell med info om vad regionen heter och
-vem som är account manager. Slutar någon är det enkelt att upddatera regionen och få det att överföras till alla tabeller. Det finns ju redan program för att 
-ändra i sql med grafiska typsnitt och är det bara två tabeller och enskilda kolumner som skall ändras så bör det vara lugnt att göra med ett sådant program,
-så det är även något som mitt program inte behöver lösa, jag kan fokusera på att lösa själva datahanteringen.  
-
-en simpel WHERE query för datum tar fram rätt tidsperiod, sedan kan man helt enkelt iterera över datan i tidsperioden för att skapa relevant data för 
-butiker och regioner. 
+att få fram mängden gross för en butik blir enkelt, behöver bara räkna mängden gånger varje butiksnamn dyker upp i listan. Vill man ha för vissa tidsperioder
+ser man helt enkelt bara till att lägga till mellan vilka datum det gäller. 
