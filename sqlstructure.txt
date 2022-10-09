@@ -1,20 +1,31 @@
-hur bygger vi detta, om vi tänker igenom det? 
-
-1. hur får jag vilken butik som har vilket nummer med csv filen? Excel filen innehåller redan detta, jobbar jag med den blir det alltså enklare i sig. 
-2. Men det betyder ju att excelfilen gör det jobbet nu, och det kanske hade varit bra om man kunnat gå ifrån den och man istället "bara" hade behövt
-ett program som man lägger in relevanta filer i, trycker på en knapp och VOILA! Dagens uppdatering, en databas som fylls på och så vidare. Får helt enkelt 
-fråga Angelica/Klara hur man hittar vilken butik som ahr vilket nummer idag och så jobbar jag därifrån. är det storelist.xlsx som ligger mappen jag kommer 
-åt med VPNen? Har inte access till den filen, får fråga.
+Alright. Hur bygger vi SQL-databasen? Det är den stora frågan och python-delen och om det är via excel eller CSV är faktiskt skitsamma just nu.
+Först måste jag ju lösa en fungerande struktur, så jag vet hur jag vill gå igenom filerna. Så just nu spelar det ingen roll att jag inte ens har 
+read-permission för Workshop-mappen. 
 
 
-Men hur ser en SQL databas ut om vi tänker lite framåt? Först har vi ett table med nummer, butikID som aktiverade numret och regionID som aktiverade numret. 
-Bör även värdet vara med här? Antagligen. Eller bör det vara sitt eget table med datum, värde etc? 
-storeID och regionID är foreign keys som refererar till egna tables där resten av informationen för 
-respektive enhet finns. T.ex. butiksnamn, plats, men även kanske totalt värde laddat.
+Jag tänker spontant att jag kanske vill ha en databas för nyaktiveringar och en för topups. Spontant blir strukturen för databasen med topups svårast
+att lösa. Då samma nummer kommer kunna ha många topups och vi vill kanske inte bara ha ett värde som ökar på numret? Eller vill vi det? 
+Vad är slutmålet för topup databasen? Att jämföra värde över tid samt kunna ta fram hur mycket en enskild butik eller region haft i topup under tid. Det är möjligtvis så
+att vi på något sätt vill kunnna veta när ett kort blir laddat för första gången. (gör en koll om numret finns antar jag, finns det inte är det första gången det laddas)
+och spara värdet för första topupen separat. Varför? Då har man möjligheten att enkelt ta fram första laddngisvärde för en viss period. Om vi tänker oss att målet 
+med databasen skall vara att kunna ta fram budget data och inte bara statistik för att jämföra mot tidigare perioder.
 
-CREATE TABLE MSISDN (
-MSISDN Int NOT NULL PRIMARY KEY,
-TopUp Int NOT NULL alternativt TopUpID Int NOT NULL FOREIGN KEY REFERENCES TopUpTable(TopUpID),
-StoreID int NOT NULL FOREIGN KEY REFERENCES storetable(StoreID),
-RegionID int NOT NULL FOREIGN KEY REFERENCES regiontable(regionID)
-);
+Databas för topup:
+Detta känns spontant som den svårare av de två databaserna att fixa på ett snyggt sätt. 
+
+Jag tror jag vill utgå från en tabell med nummer som har attributerna MSISDN, butiksID, totalt laddningsvärde, topup datum. 
+
+
+databas för aktiveringar:
+Denna känns spontant enklare. Varje nummer som aktiveras läggs till i en tabell. Varje enskilt record har bara tre attributes. nummer + butiksID + datum aktiverat. 
+
+butiksID kopplar till en separat tabell med butiksID, butiks namn och regionsID. Byter en butik region behöver man bara byta 
+regionsID och det kopplas sedan till rätt namn och account manager. 
+
+RegionsID kopplas sedan till sin egna separata tabell med info om vad regionen heter och
+vem som är account manager. Slutar någon är det enkelt att upddatera regionen och få det att överföras till alla tabeller. Det finns ju redan program för att 
+ändra i sql med grafiska typsnitt och är det bara två tabeller och enskilda kolumner som skall ändras så bör det vara lugnt att göra med ett sådant program,
+så det är även något som mitt program inte behöver lösa, jag kan fokusera på att lösa själva datahanteringen.  
+
+en simpel WHERE query för datum tar fram rätt tidsperiod, sedan kan man helt enkelt iterera över datan i tidsperioden för att skapa relevant data för 
+butiker och regioner. 

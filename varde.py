@@ -1,14 +1,10 @@
-# What do we want to achieve? First, start by creating a function that reads one file and adds it into the dictionary. We'll 
-# work on fixing the rest later. Maybe first of all, we want to actually just figure out how the dictionary should look. 
+# Om vi använder excel, hur gör vi det på bästa sätt? Vi hämtar ut regionerna och gör regionen till en map (dictionary). 
+# I regions map:en kommer vi att mappa region till butik. butik till värde och gross. Vad vi kan fundera på är om
+# vi också vill ha värdet och grossen direkt i regionen, istället för att det skall räknas ut efteråt. i.e. vi lägger in det direkt istället.
 
-# So, the current concept I have in mind is quite straigtforward to explain, but perhaps harder to implement. 
-# We simply work through each record of the table. We first read the region. We create a top level dictionary for the region
-# if one doesn't already exist. We then move forward and add the store for the record. We add that store as a dictionary as well
-# within the region dictionary. The store dictionary will then hold a dictionary as well, containing the value and sales keys. Which we increment with 
-# the value of the last column for the record and sales which we increment by 1each time the store is seen as a record.
-# We might also want to consider adding the value and sales to the region as a whole. Or create a function that 
-# calculates this for a given region if we want it. 
-
+# Sedan skall vi nog fundera på att ha varje dag som sin egen dictionary isåfall. Så att vi på ett enkelt sätt kan jämföra olika tidsperioder?
+# Så först vill ajg lösa strukturen för att få indata. Sedan får vi lösa ett bra sätt att skapa en databas. Sedan får vi utnyttja databasen för
+# att få fram data för olika perioder.
 
 from openpyxl import load_workbook
 from collections import defaultdict
@@ -34,13 +30,16 @@ def main():
     #     print(i.value.encode("utf-8"), j.value.encode("utf-8"), k.value.encode("utf-8"), l.value)
         
     
-    for i, j, k, l in zipped:
-        if i.value:
-            value_dict[i.value.encode("utf-8")] = defaultdict
-            
-    for item in value_dict:
-        print(item)
-        
+    for region, chain, store, value in zipped:
+        print(region.value.encode("utf-8"))
+        print(chain.value.encode("utf-8"))
+        print(store.value.encode("utf-8"))
+        print(value.value)
+
+
+
+
+
 
 if __name__ == '__main__':
-    main()
+    main() 
