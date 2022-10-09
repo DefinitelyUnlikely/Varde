@@ -1,0 +1,20 @@
+hur bygger vi detta, om vi tänker igenom det? 
+
+1. hur får jag vilken butik som har vilket nummer med csv filen? Excel filen innehåller redan detta, jobbar jag med den blir det alltså enklare i sig. 
+2. Men det betyder ju att excelfilen gör det jobbet nu, och det kanske hade varit bra om man kunnat gå ifrån den och man istället "bara" hade behövt
+ett program som man lägger in relevanta filer i, trycker på en knapp och VOILA! Dagens uppdatering, en databas som fylls på och så vidare. Får helt enkelt 
+fråga Angelica/Klara hur man hittar vilken butik som ahr vilket nummer idag och så jobbar jag därifrån. är det storelist.xlsx som ligger mappen jag kommer 
+åt med VPNen? Har inte access till den filen, får fråga.
+
+
+Men hur ser en SQL databas ut om vi tänker lite framåt? Först har vi ett table med nummer, butikID som aktiverade numret och regionID som aktiverade numret. 
+Bör även värdet vara med här? Antagligen. Eller bör det vara sitt eget table med datum, värde etc? 
+storeID och regionID är foreign keys som refererar till egna tables där resten av informationen för 
+respektive enhet finns. T.ex. butiksnamn, plats, men även kanske totalt värde laddat.
+
+CREATE TABLE MSISDN (
+MSISDN Int NOT NULL PRIMARY KEY,
+TopUp Int NOT NULL alternativt TopUpID Int NOT NULL FOREIGN KEY REFERENCES TopUpTable(TopUpID),
+StoreID int NOT NULL FOREIGN KEY REFERENCES storetable(StoreID),
+RegionID int NOT NULL FOREIGN KEY REFERENCES regiontable(regionID)
+);
