@@ -4,6 +4,9 @@
 # SQL databasen korrekt.
 
 import pyodbc
+from os import path
+
+# first, fix the path, so you don't have to change that all the time, I guess?
 
 
 def read_db():
@@ -15,8 +18,8 @@ def read_db():
     cursor.execute('select * from Storecheck')
 
 
-    for row in cursor.fetchall():
-        print(row)
+    for item in cursor.fetchone():
+        print(item)
 
 
 read_db()
