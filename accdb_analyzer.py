@@ -9,25 +9,43 @@ import pyodbc
 # The end result involves tkinter and using path finder.
 
 
-def read_db():
+def connect_db():
     conn = pyodbc.connect(
     r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
     r'DBQ=C:\Code\Projects\master_database.accdb;'
     )
     cursor = conn.cursor()
-    cursor.execute('select * from Storecheck')
+
+    return cursor
 
 
-    number, created, activated, region, chain, store = cursor.fetchone()
+def gross(gross_cursor):
+    pass
+
+
+def varde(varde_cursor):
+    pass
+
     
-    print(int(number))
     
-    cursor.execute('select MSISDN from Laddningsdata WHERE MSISDN = 708539423')
-    print(cursor.fetchall())
-        
+returned_cursor = connect_db()
+returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated = #11/08/2018#")
 
 
-read_db()
+for item in returned_cursor.fetchall():
+    print(item)
+    
+# https://support.microsoft.com/en-us/office/examples-of-using-dates-as-criteria-in-access-queries-aea83b3b-46eb-43dd-8689-5fc961f21762
+# returned_cursor.execute("SELECT * FROM Storecheck;") remember to make a SQL statement on the cursror before trying to use it.
+#returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated between Date() and Date()-14;") # Use Date() and Date()-number of days!!!
+# returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated between Date() and DateAdd('M', -6, Date())")
+# returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated = #11/08/2018#") specifikt datum
+# Använd > eller < på istället för = om vi vill ha emellan vissa tider.
+
+
+# Men vi måste ändå lista ut även hur man skriver in datum. Jag vill kunna ge dem en kalander att välja ur. 
+
+
 
 # Vissa nummer börjar med en etta, där det borde vara en nolla. Resterande har tagit bort den ledande nollan ifrån men saknar etta. 
 # Jag vet inte om det innebär något speciellt, jag får undersöka det närmare. Jag får kolla så att de nummer som börjar med en etta 
@@ -49,3 +67,13 @@ read_db()
 # När dessa saker är lösta kan vi gå vidare till att skapa en GUI. Då vill jag att man skall välja databasen 
 # och sedan kunna välja vad man vill göra och få det utskrivet till en excel fil, alterantivt i något annat format som 
 # är enkelt att använda.
+
+
+# Hur löser vi våra subproblem? Via tabellen storecheck kan jag ta reda på när ett kort aktiverades och vilken butik kortet tillhör.
+# Via Laddningsvärde kan jag ta reda på topup.
+
+# Ska vi iterera över storecheck och kolla varje kort? Ska vi kolla varke kort och gå in i storecheck? 
+# Vilken lösning är bäst?
+
+# Vi skall nog börja i änden att man väljer datum. Därefter gör vi en query på datum i både storecheck och laddningsvärde och häntar till 
+# vår backend? Eller vill vi göra det med SQL queries?
