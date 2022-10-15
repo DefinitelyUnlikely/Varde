@@ -3,7 +3,9 @@
 # om vi kan använda databasen som telenor uppdaterar ändå. Då blir det inget jobb från våran sida att hålla
 # SQL databasen korrekt.
 import pyodbc
-
+import tkinter as tk
+import datetime
+from tkcalendar import Calendar
 
 # first, fix the path, so you don't have to change that all the time, I guess? ACtually, It doesn't matter. 
 # The end result involves tkinter and using path finder.
@@ -23,18 +25,24 @@ def gross(gross_cursor):
     pass
 
 
-def varde(varde_cursor):
-    pass
+def varde(varde_cursor, start_date, end_date):
+    varde_cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{start_date}# and #{end_date}#;")
+
 
     
     
 returned_cursor = connect_db()
-returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated = #11/08/2018#")
 
 
-for item in returned_cursor.fetchall():
-    print(item)
-    
+root = tk.Tk()
+
+root.title("Badabing, Badaboom")
+root.geometry("1380x640+640+300")
+root.configure(bg='lightblue')
+
+root.mainloop()  
+
+
 # https://support.microsoft.com/en-us/office/examples-of-using-dates-as-criteria-in-access-queries-aea83b3b-46eb-43dd-8689-5fc961f21762
 # returned_cursor.execute("SELECT * FROM Storecheck;") remember to make a SQL statement on the cursror before trying to use it.
 #returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated between Date() and Date()-14;") # Use Date() and Date()-number of days!!!
@@ -43,7 +51,7 @@ for item in returned_cursor.fetchall():
 # Använd > eller < på istället för = om vi vill ha emellan vissa tider.
 
 
-# Men vi måste ändå lista ut även hur man skriver in datum. Jag vill kunna ge dem en kalander att välja ur. 
+# Men vi måste ändå lista ut även hur man skriver in datum. Jag vill kunna ge dem en kalender att välja ur. 
 
 
 
