@@ -11,6 +11,9 @@ from tkcalendar import Calendar
 # The end result involves tkinter and using path finder.
 
 
+def get_dates():
+    print(f"Selected Dates are From {from_cal.get_date()} To {to_cal.get_date()}")
+
 def connect_db():
     conn = pyodbc.connect(
     r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
@@ -18,20 +21,22 @@ def connect_db():
     )
     cursor = conn.cursor()
 
-    return cursor
+    return conn, cursor
 
 
 def gross(gross_cursor):
     pass
 
 
-def varde(varde_cursor, start_date, end_date):
-    varde_cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{start_date}# and #{end_date}#;")
+def varde():
+    returned_cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}# AND Region = 'Centralt';")
+    for i in returned_cursor.fetchall():
+        print(i)
 
 
     
     
-returned_cursor = connect_db()
+returned_conn, returned_cursor = connect_db()
 
 
 root = tk.Tk()
@@ -40,8 +45,21 @@ root.title("Badabing, Badaboom")
 root.geometry("1380x640+640+300")
 root.configure(bg='lightblue')
 
+from_cal_label = tk.Label(root, text="Från Datum").grid(row=0, column=0)
+from_cal = Calendar()
+from_cal.grid(row=1, column=0)
+
+to__cal_label = tk.Label(root, text="Till Datum").grid(row=0, column=1)
+to_cal = Calendar()
+to_cal.grid(row=1, column=1)
+
+tk.Button(text="Välj Datum", command=get_dates).grid(row=2, column=1)
+
+tk.Button(text="Kalkylera Värde", command=varde).grid(row=4, column=4,  sticky="s")
+
 root.mainloop()  
 
+returned_conn.close()
 
 # https://support.microsoft.com/en-us/office/examples-of-using-dates-as-criteria-in-access-queries-aea83b3b-46eb-43dd-8689-5fc961f21762
 # returned_cursor.execute("SELECT * FROM Storecheck;") remember to make a SQL statement on the cursror before trying to use it.
