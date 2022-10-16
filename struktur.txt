@@ -15,3 +15,5 @@ Lösning problem 1:
 
 Börja med att ta fram alla nummer och deras laddningsvärde för en period. Spara detta.
 Ta sedan fram i vilken butik varje nummer finns. 
+
+Eller jadu, jag borde kanske titta på att göra en join? 
