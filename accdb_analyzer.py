@@ -2,6 +2,7 @@ import pyodbc
 import tkinter as tk
 from tkinter import filedialog
 from tkcalendar import Calendar
+from collections import defaultdict, Counter
 
 
 def connect_db():
@@ -22,9 +23,18 @@ def calculate_option():
         # Hämta alla nummer som aktiverats i tidsintervallet
         # cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;")
         # Hämta all laddningsdata från en specifik tidsintervall
-        ladd = cursor.execute(f'SELECT * FROM Laddningsdata WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
-        for i in ladd.fetchall():
-            print(i.MSISDN)
+        cursor.execute(f'SELECT * FROM Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number '
+               f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
+        region_map = Counter()
+        store_map = Counter()
+        for i in cursor.fetchall():
+            # print(i.MSISDN, i[1], i.Activated, i.Store, i.Region, (i.Measure * i[3]))
+            region_map[i.Region] += i.Measure * i[3]
+            store_map[i.Store] += i.Measure * i[3]
+
+
+        for reg in region_map:
+            print(reg, region_map[reg])
 
     if var.get() == 2:
         print("Currently Testing Butikslista")

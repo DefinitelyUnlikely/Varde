@@ -17,3 +17,15 @@ Börja med att ta fram alla nummer och deras laddningsvärde för en period. Spa
 Ta sedan fram i vilken butik varje nummer finns. 
 
 Eller jadu, jag borde kanske titta på att göra en join? 
+
+cursor.execute('SELECT * FROM Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number '
+               'WHERE "Topup date" between #10/3/22# and #10/3/22#;')
+
+denna hämtar Laddningsdata och joinar sedan på Storecheck på den. Fördelen med det är att om ett nummer blir laddat
+flera gånger bör butiken läggas på varje enskild laddning. 
+
+Just nu provade jag att ha en counter som helt enkelt lägger ihop allt värde för en månad. Det är dock mycket högre 
+än det som skickades ut till oss i vår budget när jag jämförde september. Även om jag lade ihop ALLA laddningar till
+ett ända stort värde. 
+
+Jag får helt enkelt kolla igenom min indata samt även att det inte är fel på Angelica och Klaras sida.
