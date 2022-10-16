@@ -20,20 +20,14 @@ def connect_db():
     )
     cursor = conn.cursor()
     
-    cursor.execute("SELECT DISTINCT Region FROM Storecheck;")
-    managerList.insert(tk.END, *[j for i in cursor.fetchall() for j in i])
 
-
-
-def gross(gross_cursor):
-    pass
-
-
-def varde():
-    selected_region = managerList.get(managerList.curselection())
-    cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}# AND Region = '{selected_region}';")
-    for i in cursor.fetchall():
-        print(i)
+def calculate_option():
+    if var.get() == 1:
+        cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;")
+        for i in cursor.fetchall():
+            print(i)
+    if var.get() == 2:
+        print("Currently Testing")
 
 
 def quit_program():
@@ -44,44 +38,40 @@ def quit_program():
         root.quit()
 
 
+
 root = tk.Tk()
 
+
 root.title("Badabing, Badaboom")
-root.geometry("1380x640+640+300")
+root.geometry("1000x500+500+500")
 root.configure(bg='lightblue')
 
-from_cal_label = tk.Label(root, text="Från Datum").grid(row=0, column=1, padx=20)
-from_cal = Calendar()
-from_cal.grid(row=1, column=1, pady=20)
-
-to__cal_label = tk.Label(root, text="Till Datum").grid(row=0, column=2, padx=20)
-to_cal = Calendar()
-to_cal.grid(row=1, column=2, padx=20)
-
-managerLabel = tk.Label(text="Region")
-managerLabel.grid(row=0, column=4, sticky="nsew", padx=20)
-managerLabel.configure(bg="gray16", fg="mint cream")
-
-managerList = tk.Listbox(root, fg="mint cream", bg="gray25")
-managerList.grid(row=1, column=4, padx=20)
-managerList.configure(relief="sunken")
-
-managerScroll = tk.Scrollbar(root, orient=tk.VERTICAL, command=managerList.yview)
-managerScroll.grid(row=1, column=4, sticky="nse")
-managerList["yscrollcommand"] = managerScroll.set
+var = tk.IntVar()
+radio1 = tk.Radiobutton(root, text="Regionslista", variable=var, value=1)
+radio2 = tk.Radiobutton(root, text="Butikslista", variable=var, value=2)
+radio1.place(x=600, y=50)
+radio2.place(x=600, y=70)
+radioLabel = tk.Label(root, text="Välj typ av output").place(x=600, y=20)
 
 importButton = tk.Button(text="Välj databas", command=connect_db)
-importButton.grid(row=0, column=0, padx=5, pady=10)
+importButton.place(x=20, y=450)
 importButton.configure(border=2, relief="raised")
 
+calculateButton = tk.Button(text="Kalkylera", command=calculate_option)
+calculateButton.place(x=600, y=200)
 
-tk.Button(text="Kalkylera Värde", command=varde).grid(row=4, column=5,  sticky="s")
-
-
-quitButton = tk.Button(text="Exit", command=quit_program,
-                       fg="mint cream", bg="gray25")
-quitButton.grid(row=6, column=0, pady=10)
+quitButton = tk.Button(text="Exit", command=quit_program, fg="mint cream", bg="gray25")
+quitButton.place(y=450, x=960)
 quitButton.configure(border=2, relief="raised")
+
+from_cal_label = tk.Label(root, text="Från Datum").place(x=50, y=20)
+from_cal = Calendar(root)
+from_cal.place(x=50, y=50)
+
+to_cal_label = tk.Label(root, text="Till Datum").place(x=320, y=20)
+to_cal = Calendar(root)
+to_cal.place(x=320, y=50)
+
 
 root.mainloop()  
 
