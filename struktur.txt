@@ -1,0 +1,17 @@
+Okej, här tänker jag att jag skriver ner mina tankar om hur jag vill jobba med MS Access databasen.
+Först behöver jag lista ut hur jag ska få fram relevant data.
+
+Så, vilka problem har jag? 
+
+1. Jag vill kunna ta fram långsiktigt värde för en region under en tidsperiod.
+2. Jag vill kunna ta fram första laddningsvärde för en region under en tidsperiod. 
+3. Vill jag kunna ta fram totalt laddat värde under en period? Det blir väl bara 1 + 2. Eller gör vi den först, delar upp det sedan?
+4. Ta fram gross, dela upp dem i förladdade och tomma.
+
+Vi börjar med dessa problem. När vi löst detta kan vi börja titta på att printa det till excel, att göra jämförelser 
+för olika tidsperioder osv. 
+
+Lösning problem 1:
+
+Börja med att ta fram alla nummer och deras laddningsvärde för en period. Spara detta.
+Ta sedan fram i vilken butik varje nummer finns. 

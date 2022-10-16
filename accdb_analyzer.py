@@ -18,12 +18,13 @@ def connect_db():
 def calculate_option():
     if var.get() == 1:
         print("Currently Testing Regionlista")
+        print(f"#{from_cal.get_date()}# and #{to_cal.get_date()}#")
         # Hämta alla nummer som aktiverats i tidsintervallet
         # cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;")
         # Hämta all laddningsdata från en specifik tidsintervall
-        cursor.execute(f'SELECT * FROM Laddningsdata WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
-        for i in cursor.fetchall():
-            print(i)
+        ladd = cursor.execute(f'SELECT * FROM Laddningsdata WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
+        for i in ladd.fetchall():
+            print(i.MSISDN)
 
     if var.get() == 2:
         print("Currently Testing Butikslista")
