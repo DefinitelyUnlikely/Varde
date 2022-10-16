@@ -4,24 +4,25 @@
 # SQL databasen korrekt.
 import pyodbc
 import tkinter as tk
-import datetime
+from tkinter import filedialog
 from tkcalendar import Calendar
 
 # first, fix the path, so you don't have to change that all the time, I guess? ACtually, It doesn't matter. 
 # The end result involves tkinter and using path finder.
 
 
-def get_dates():
-    print(f"Selected Dates are From {from_cal.get_date()} To {to_cal.get_date()}")
-
 def connect_db():
+    global conn, cursor
+    file_path = filedialog.askopenfilename()
     conn = pyodbc.connect(
     r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-    r'DBQ=C:\Code\Projects\master_database.accdb;'
+    f'DBQ={file_path};'
     )
     cursor = conn.cursor()
+    
+    cursor.execute("SELECT DISTINCT Region FROM Storecheck;")
+    managerList.insert(tk.END, *[j for i in cursor.fetchall() for j in i])
 
-    return conn, cursor
 
 
 def gross(gross_cursor):
@@ -29,14 +30,18 @@ def gross(gross_cursor):
 
 
 def varde():
-    returned_cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}# AND Region = 'Centralt';")
-    for i in returned_cursor.fetchall():
+    selected_region = managerList.get(managerList.curselection())
+    cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}# AND Region = '{selected_region}';")
+    for i in cursor.fetchall():
         print(i)
 
 
-    
-    
-returned_conn, returned_cursor = connect_db()
+def quit_program():
+    try:
+        conn.close()
+        root.quit()
+    except NameError:
+        root.quit()
 
 
 root = tk.Tk()
@@ -45,21 +50,41 @@ root.title("Badabing, Badaboom")
 root.geometry("1380x640+640+300")
 root.configure(bg='lightblue')
 
-from_cal_label = tk.Label(root, text="Från Datum").grid(row=0, column=0)
+from_cal_label = tk.Label(root, text="Från Datum").grid(row=0, column=1, padx=20)
 from_cal = Calendar()
-from_cal.grid(row=1, column=0)
+from_cal.grid(row=1, column=1, pady=20)
 
-to__cal_label = tk.Label(root, text="Till Datum").grid(row=0, column=1)
+to__cal_label = tk.Label(root, text="Till Datum").grid(row=0, column=2, padx=20)
 to_cal = Calendar()
-to_cal.grid(row=1, column=1)
+to_cal.grid(row=1, column=2, padx=20)
 
-tk.Button(text="Välj Datum", command=get_dates).grid(row=2, column=1)
+managerLabel = tk.Label(text="Region")
+managerLabel.grid(row=0, column=4, sticky="nsew", padx=20)
+managerLabel.configure(bg="gray16", fg="mint cream")
 
-tk.Button(text="Kalkylera Värde", command=varde).grid(row=4, column=4,  sticky="s")
+managerList = tk.Listbox(root, fg="mint cream", bg="gray25")
+managerList.grid(row=1, column=4, padx=20)
+managerList.configure(relief="sunken")
+
+managerScroll = tk.Scrollbar(root, orient=tk.VERTICAL, command=managerList.yview)
+managerScroll.grid(row=1, column=4, sticky="nse")
+managerList["yscrollcommand"] = managerScroll.set
+
+importButton = tk.Button(text="Välj databas", command=connect_db)
+importButton.grid(row=0, column=0, padx=5, pady=10)
+importButton.configure(border=2, relief="raised")
+
+
+tk.Button(text="Kalkylera Värde", command=varde).grid(row=4, column=5,  sticky="s")
+
+
+quitButton = tk.Button(text="Exit", command=quit_program,
+                       fg="mint cream", bg="gray25")
+quitButton.grid(row=6, column=0, pady=10)
+quitButton.configure(border=2, relief="raised")
 
 root.mainloop()  
 
-returned_conn.close()
 
 # https://support.microsoft.com/en-us/office/examples-of-using-dates-as-criteria-in-access-queries-aea83b3b-46eb-43dd-8689-5fc961f21762
 # returned_cursor.execute("SELECT * FROM Storecheck;") remember to make a SQL statement on the cursror before trying to use it.
