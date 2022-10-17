@@ -77,11 +77,24 @@ SVAR OM LÅNGSIKTIGT VÄRDE:
 långsiktiga är inklusive förstaladdningen och sedan alla laddningar på ett specifikt nummer i ett år. I och med att nummer återanvänds 
 räknas inte det mer än ett år bakåt i tiden för att de då kan vara återaktiverade.
 
-Detta innebär att för att få fram långsiktigt värde, så behöver jag helt enkelt kolla upp alla nummer som aktiverats under ett år. Sedan kollar man 
-hur mycket värde de har fått under året. Det som blir enklast då... är det att gå igenom laddningsdata och helt enkelt ta bara lägga ihop laddningar?
-Så länge man kollar att kortet var aktiverat inom ett år bakåt i tiden, gentemot det sista datum man vill ha i sin period.
+Så, långsiktigt värde för en region, hur tar vi då fram det? För ett aktiverat kort, så behöver vi kolla alla laddningar som gjorts på detta,
+ett år framåt sedan det aktiverades?
+
+Om vi tänker utan året. Hur hade vi då gjort? Om vi ville veta långsiktiga värdet i en region under en viss period hade jag gått igenom alla
+laddningar för den perioden och sedan kollat vilken region numret hör till, för att koppla värdet till den regionen. Särskilt om
+första laddning ingår i långsiktigt, för då vill jag ju bara veta vilken region som ska ha värdet lagt på sig och jag vet att laddningen
+gjordes nyligen. Det är möjligtvis isåfall om jag OCKSÅ skall kolla, innan jag lägger in värdet i regionen, att kortet inte aktiverades
+mer en ett år sedan från senaste datumeti perioden jag undersöker. Det kan förklara varför jag fick MER värde när jag gjorde det ovan
+(för det var väl det jag gjorde först, för att testa?)
 
 cursor.execute('SELECT Laddningsdata.MSISDN, "Topup date", Measure, "Amount paid", Activated, Storecheck.Region, Store, Chain, Artikel ' 
                'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
                'INNER JOIN SIM_kort ON Storecheck.number=SIM_Kort.MSISDN '
                'WHERE Activated between #10/03/22# and #10/03/22#;')
+
+cursor.execute(
+    'SELECT Number, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+    'FROM (Storecheck INNER JOIN Laddningsdata ON Storecheck.Number=Laddningsdata.MSISDN) '
+    'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+    'WHERE Activated between #09/30/22# and #09/30/22#'
+    )
