@@ -2,6 +2,7 @@
 
 import pyodbc
 from collections import defaultdict, Counter
+import datetime
 
 conn = pyodbc.connect(
 r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
@@ -9,24 +10,16 @@ r'DBQ=C:\Code\Projects\master_database.accdb;'
 )
 cursor = conn.cursor()
 
-cursor.execute('SELECT * FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
-               'INNER JOIN SIM_kort ON Storecheck.number=SIM_Kort.MSISDN '
-               'WHERE "Topup date" between #09/1/22# and #09/30/22#;')
-
-# i[1] = i.Topup date, i[3] = Amount paid
-
-region_map = Counter()
-store_map = Counter()
-for i in cursor.fetchall():
-    # print(i.MSISDN, i[1], i.Activated, i.Store, i.Region, (i.Measure * i[3]))
-    region_map[i.Region] += i.Measure * i[3]
-    store_map[i.Store] += i.Measure * i[3]
-    # Ska jag inte ha med measure? Jag antog att det var antalet laddningar. Utan den blir värdet mycket närmare 
-    # det jag fick i budget mailen.
+cursor.execute(
+    'SELECT Number, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+    'FROM (Storecheck INNER JOIN Laddningsdata ON Storecheck.Number=Laddningsdata.MSISDN) '
+    'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+    'WHERE Activated between #09/30/22# and #09/30/22#'
+    )
 
 
-for reg in region_map:
-    print(reg, region_map[reg])
+#for reg in region_map:
+#    print(reg, region_map[reg])
 
 # ladd = cursor.execute(f'SELECT * FROM Laddningsdata WHERE "Topup date" between #10/3/22# and #10/3/22#;')
 

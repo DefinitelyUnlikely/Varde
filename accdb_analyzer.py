@@ -28,9 +28,8 @@ def calculate_option():
         region_map = Counter()
         store_map = Counter()
         for i in cursor.fetchall():
-            # print(i.MSISDN, i[1], i.Activated, i.Store, i.Region, (i.Measure * i[3]))
-            region_map[i.Region] += i.Measure * i[3]
-            store_map[i.Store] += i.Measure * i[3]
+            region_map[i.Region] += i.Measure * i.__getattribute__('Amount paid')
+            store_map[i.Store] += i.Measure * i.__getattribute__('Amount paid')
 
 
         for reg in region_map:
