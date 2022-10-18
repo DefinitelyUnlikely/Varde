@@ -96,5 +96,17 @@ cursor.execute(
     'SELECT Number, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
     'FROM (Storecheck INNER JOIN Laddningsdata ON Storecheck.Number=Laddningsdata.MSISDN) '
     'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
-    'WHERE Activated between #09/30/22# and #09/30/22#'
+    'WHERE Activated between #09/30/21# and #09/30/22# '
+    'AND "Topup date" between #09/30/21# and #09/30/22#'
     )
+
+        one_year_earlier = str(int(to_cal.get_date()[-2:]) - 1)
+        earlier_string = f"{to_cal.get_date()[:-2]}{one_year_earlier}"
+
+        cursor.execute(
+            'SELECT Number, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+            'FROM (Storecheck INNER JOIN Laddningsdata ON Storecheck.Number=Laddningsdata.MSISDN) '
+            'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+            f'WHERE Activated between #{earlier_string}# and #{to_cal.get_date()}# '
+            f'AND "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
+            )

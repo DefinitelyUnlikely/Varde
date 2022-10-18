@@ -1,5 +1,6 @@
 import pyodbc
 import tkinter as tk
+import datetime
 from tkinter import filedialog
 from tkinter import ttk
 from tkcalendar import Calendar
@@ -20,12 +21,23 @@ def connect_db():
 def calculate_option():
     if var.get() == 1:
         print("Currently Testing Regionlista")
-        print(f"#{from_cal.get_date()}# and #{to_cal.get_date()}#")
-        # Hämta alla nummer som aktiverats i tidsintervallet
-        # cursor.execute(f"SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;")
-        # Hämta all laddningsdata från en specifik tidsintervall
-        cursor.execute(f'SELECT * FROM Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number '
-               f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
+        
+        # Då .get_date() är ett string objekt blev det svårt att använda timedelta etc. Synd, det är nog en bättre 
+        # lösning egentligen. Men detta verkar funka. Vi får hålla lite koll på detta och edge cases (typ skottår)
+        one_year_earlier = str(int(to_cal.get_date()[-2:]) - 1)
+        earlier_string = f"{to_cal.get_date()[:-2]}{one_year_earlier}"
+        
+        cursor.execute(
+            'SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+            'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
+            'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+            f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
+            f'AND Activated between #{earlier_string}# and #{to_cal.get_date()}# '
+            )
+        
+        for i in cursor.fetchone():
+            print(i)
+
         #region_map = Counter()
         #store_map = Counter()
         #for i in cursor.fetchall():
