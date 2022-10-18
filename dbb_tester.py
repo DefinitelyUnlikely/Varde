@@ -14,7 +14,8 @@ cursor.execute(
     'SELECT Number, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
     'FROM (Storecheck INNER JOIN Laddningsdata ON Storecheck.Number=Laddningsdata.MSISDN) '
     'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
-    'WHERE Activated between #09/30/21# and #09/30/22#'
+    'WHERE Activated between #09/30/21# and #09/30/22# '
+    'AND "Topup date" between #09/30/21# and #09/30/22#'
     )
 
 

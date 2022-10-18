@@ -1,6 +1,7 @@
 import pyodbc
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
 from tkcalendar import Calendar
 from collections import defaultdict, Counter
 
@@ -25,15 +26,15 @@ def calculate_option():
         # Hämta all laddningsdata från en specifik tidsintervall
         cursor.execute(f'SELECT * FROM Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number '
                f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
-        region_map = Counter()
-        store_map = Counter()
-        for i in cursor.fetchall():
-            region_map[i.Region] += i.Measure * i.__getattribute__('Amount paid')
-            store_map[i.Store] += i.Measure * i.__getattribute__('Amount paid')
+        #region_map = Counter()
+        #store_map = Counter()
+        #for i in cursor.fetchall():
+        #    region_map[i.Region] += i.Measure * i.__getattribute__('Amount paid')
+        #    store_map[i.Store] += i.Measure * i.__getattribute__('Amount paid')
 
 
-        for reg in region_map:
-            print(reg, region_map[reg])
+        #for reg in region_map:
+        #    print(reg, region_map[reg])
 
     if var.get() == 2:
         print("Currently Testing Butikslista")
@@ -55,31 +56,48 @@ root.title("Badabing, Badaboom")
 root.geometry("1000x500+500+500")
 root.configure(bg='lightblue')
 
+tabControl = ttk.Notebook(root)
+
+calculate = ttk.Frame(tabControl)
+instructions = ttk.Frame(tabControl)
+tabControl.add(calculate, text='Kalkylator')
+tabControl.add(instructions, text='Instruktioner')
+tabControl.place(x=0, y=0, width=1000, height=500 )
+
 var = tk.IntVar()
-radio1 = tk.Radiobutton(root, text="Regionslista", variable=var, value=1)
-radio2 = tk.Radiobutton(root, text="Butikslista", variable=var, value=2)
+radio1 = tk.Radiobutton(calculate, text="Regionslista", variable=var, value=1)
+radio2 = tk.Radiobutton(calculate, text="Butikslista", variable=var, value=2)
 radio1.place(x=600, y=50)
 radio2.place(x=600, y=70)
-radioLabel = tk.Label(root, text="Välj typ av output").place(x=600, y=20)
+radioLabel = tk.Label(calculate, text="Välj typ av output").place(x=600, y=20)
 
-importButton = tk.Button(text="Välj databas", command=connect_db)
-importButton.place(x=20, y=450)
+importButton = tk.Button(calculate, text="Välj databas", command=connect_db)
+importButton.place(x=20, y=420)
 importButton.configure(border=2, relief="raised")
 
-calculateButton = tk.Button(text="Kalkylera", command=calculate_option)
+calculateButton = tk.Button(calculate, text="Kalkylera", command=calculate_option)
 calculateButton.place(x=600, y=200)
 
-quitButton = tk.Button(text="Exit", command=quit_program, fg="mint cream", bg="gray25")
+quitButton = tk.Button(text="Exit", command=quit_program, fg="mint cream", bg="DarkOrange3")
 quitButton.place(y=450, x=960)
 quitButton.configure(border=2, relief="raised")
 
-from_cal_label = tk.Label(root, text="Från Datum").place(x=50, y=20)
-from_cal = Calendar(root)
+from_cal_label = tk.Label(calculate, text="Från Datum").place(x=50, y=20)
+from_cal = Calendar(calculate)
 from_cal.place(x=50, y=50)
 
-to_cal_label = tk.Label(root, text="Till Datum").place(x=320, y=20)
-to_cal = Calendar(root)
+to_cal_label = tk.Label(calculate, text="Till Datum").place(x=320, y=20)
+to_cal = Calendar(calculate)
 to_cal.place(x=320, y=50)
+
+
+instructionsText = """
+1. Om programmet inte fungerar, behöver man mest troligt installera
+en driver. För Windows: https://www.microsoft.com/en-US/download/details.aspx?id=13255
+Om man använder UNIX (MacOS/Linux) 
+"""
+instructionsLabel = tk.Label(instructions, bg='gray20', fg='white', text=instructionsText)
+instructionsLabel.place(x=50, y=50)
 
 
 root.mainloop()  
