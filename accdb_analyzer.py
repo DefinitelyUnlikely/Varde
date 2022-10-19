@@ -19,6 +19,16 @@ def connect_db():
     
 
 def calculate_option():
+    
+    empty_cards = {'TA81218 - Telenor Prepaid TripleSIM 0kr', 'TA81258 - Telenor Prepaid TripleSIM 0kr (till 25-pack)'}
+    preloaded_cards = {'TA81228 - Telenor Prepaid TripleSIM Fast 1 m�nad Mini',
+                   'TA81259 - Telenor MBB 100 GB 1 �r',
+                   'TA81220 - Telenor Prepaid TripleSIM Fast 1 m�nad',
+                   'TA81235 - Telenor Prepaid MBB 10Gb',
+                   'TA81230 - Telenor Prepaid TripleSIM Halv�r',
+                   'TA81247 - Prepaid Startpaket HELLO',}
+    volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
+    
     if var.get() == 1:
         print("Currently Testing Regionlista")
         

@@ -103,10 +103,21 @@ cursor.execute(
         one_year_earlier = str(int(to_cal.get_date()[-2:]) - 1)
         earlier_string = f"{to_cal.get_date()[:-2]}{one_year_earlier}"
 
-        cursor.execute(
-            'SELECT Number, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
-            'FROM (Storecheck INNER JOIN Laddningsdata ON Storecheck.Number=Laddningsdata.MSISDN) '
-            'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
-            f'WHERE Activated between #{earlier_string}# and #{to_cal.get_date()}# '
-            f'AND "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
-            )
+cursor.execute(
+    'SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+    'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
+    'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+    f'WHERE "Topup date" between #{from_date}# and #{to_date}#'
+    f'AND Activated between #{to_date - relativedelta(years=1)}# and #{to_date}#'
+    )
+
+Alright. Dags för första laddningen. Då vill jag ännu en gåg hämta alla nummer. Men denna gången vill 
+jag att korten skall ha "Activated" i Storecheck som är samma dag eller dagen efter. (Man säljer laddningen den 23de i månaden säger vi.
+Men salsa har redan skapat siffror för dagen, så det aktiverade kortet kommer inte med in i Storecheck tabellen. Däremot kommer den 
+att bli tillagd den 24de i månaden.) Eller är det så att man skall kolla om topup datumet är INNAN eller samma som Activated datumet i Storecheck?
+Det är nog det bättre alternativet. Vi kollar helt enkelt om laddningen gjordes innan kortet fanns i Storecheck tabellen. Isåfall var det första
+laddningen. Om vi inte kör Activated datum som är äldre än ett år så bör vi inte heller få dubbleter, så att vi kan ha en topup som är första 
+laddningen för ett kort, men numret har återanvänts (och då skulle kunna ha ett activated datum som är äldre än kortet).
+
+Detta är väl möjligtvis något vi hade kunnat göra DIREKT i python, istället för med en SQL query. Det är nog kanske till och med enklare
+om jag kan lösa att datumen som kommer ut från calendern funkar. Vi får jobba på det.
