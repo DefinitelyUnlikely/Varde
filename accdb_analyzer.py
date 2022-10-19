@@ -26,7 +26,8 @@ def calculate_option():
                    'TA81220 - Telenor Prepaid TripleSIM Fast 1 m�nad',
                    'TA81235 - Telenor Prepaid MBB 10Gb',
                    'TA81230 - Telenor Prepaid TripleSIM Halv�r',
-                   'TA81247 - Prepaid Startpaket HELLO',}
+                   'TA81247 - Prepaid Startpaket HELLO',
+                   }
     volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
     
     if var.get() == 1:

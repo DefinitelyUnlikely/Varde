@@ -20,7 +20,8 @@ preloaded_cards = {'TA81228 - Telenor Prepaid TripleSIM Fast 1 m�nad Mini',
                    'TA81220 - Telenor Prepaid TripleSIM Fast 1 m�nad',
                    'TA81235 - Telenor Prepaid MBB 10Gb',
                    'TA81230 - Telenor Prepaid TripleSIM Halv�r',
-                   'TA81247 - Prepaid Startpaket HELLO',}
+                   'TA81247 - Prepaid Startpaket HELLO',
+                   }
 volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
 
 # För att hämta långsiktigt värde. Vi tar alla laddnignar inom en period.
@@ -50,14 +51,14 @@ cursor.execute(
  
 
 
-
-region_counter = defaultdict(defaultdict())
-for i in cursor.fetchall():
-        region_counter[i.Region]["Varde"] += i.__getattribute__("Amount paid") * i.Measure
+# Vi får typ använda setdefault på en vanlig dict, och göra defaulten för en region till en dict med allt vi behöver.
+region_counter = Counter()
+for i in cursor:
+        region_counter[i.Region] += i.__getattribute__("Amount paid") * i.Measure
 
 
 for reg in region_counter:
-   print(reg, region_counter[reg]["Varde"])
+   print(reg, region_counter[reg])
    
 
 # ladd = cursor.execute(f'SELECT * FROM Laddningsdata WHERE "Topup date" between #10/3/22# and #10/3/22#;')
