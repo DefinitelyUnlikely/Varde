@@ -57,3 +57,7 @@ print(f"Totalt: {sum(region_counter[reg] for reg in region_counter)}")
 
 # OM detta är sant, borde jag få mer eller mindre rätt första laddningsvärde, eller hur? För då är det bara kort som aktiverats under månaden. Har 
 # inte en butik flyttas sedan kortet aktiverades ligger det i rätt region. Oddsen är små för att det är allt för mycket av det under en månad.
+
+# En lösning kan vara att man får exportera från storecheck vald period och lägga till den csv filen i programmet. Så får programmet läsa av och uppdatera 
+# storecheck. Men vi skall kolla om det är något den gör live eller om det är npgot som skall sparas. Görs det direkt så får vi ha med att man använder 
+# en kopia av databasen, så att den som telenor vill ha den. Skrivs det inte över direkt utan att vi måste spara så skiter vi i att spara bara.
