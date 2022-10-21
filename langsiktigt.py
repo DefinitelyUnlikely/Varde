@@ -41,7 +41,7 @@ for i in cursor:
 for reg in region_counter:
    print(reg, region_counter[reg])
    
-print(sum(region_counter[reg] for reg in region_counter))
+print(f"Totalt: {sum(region_counter[reg] for reg in region_counter)}")
    
 
 # Jag har ju ett problem, i att jag producerar ut MER värde än vi fått ut i våra mail. Det skulle kunna vara så att jag 
@@ -54,3 +54,6 @@ print(sum(region_counter[reg] for reg in region_counter))
 # i telenor.storecheck.se så uppdateras ju inte Storecheck tabellen. Den har ju bara sparat ned vilken butik och region kortet var i DÅ.
 # Så när en butik byter region så ändras ju såklart inte tabellen i databasen. Den har kvar rätt butik, men FEL region. Jag får se om jag kan
 # komma på ett sätt runt detta. 
+
+# OM detta är sant, borde jag få mer eller mindre rätt första laddningsvärde, eller hur? För då är det bara kort som aktiverats under månaden. Har 
+# inte en butik flyttas sedan kortet aktiverades ligger det i rätt region. Oddsen är små för att det är allt för mycket av det under en månad.

@@ -24,4 +24,8 @@ preloaded_cards = {'TA81228 - Telenor Prepaid TripleSIM Fast 1 m�nad Mini',
                    }
 volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
 
-cursor.execute("")
+cursor.execute('')
+
+# Alright. Första laddning. En topup har ett topup datum. Det är kopplat till ett nummer. Det numret hittar jag också i Storecheck. 
+# I Storecheck kommer numret ha ett Aktiverat datum. Om topupen skedde tidigare eller samma dag som aktiveringen, så är det första laddningen.
+# Är topupen senare än aktiveringen är det inte första laddningen på kortet.
