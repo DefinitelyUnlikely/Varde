@@ -23,3 +23,5 @@ preloaded_cards = {'TA81228 - Telenor Prepaid TripleSIM Fast 1 m�nad Mini',
                    'TA81247 - Prepaid Startpaket HELLO',
                    }
 volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
+
+cursor.execute("")

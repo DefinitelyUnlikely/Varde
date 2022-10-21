@@ -24,22 +24,33 @@ preloaded_cards = {'TA81228 - Telenor Prepaid TripleSIM Fast 1 m�nad Mini',
                    }
 volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
 
-
-
 cursor.execute(
-    'SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+    'SELECT DISTINCT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
     'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
     'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
     f'WHERE "Topup date" between #{from_date}# and #{to_date}#'
-    f'AND Activated between #{to_date - relativedelta(years=1)}# and #{to_date}#'
+    f'AND Activated between #{from_date - relativedelta(years=1)}# and #{to_date}# '
     )
- 
+
  
 region_counter = Counter()
 for i in cursor:
-        region_counter[i.Region] += i.__getattribute__("Amount paid") * i.Measure
+        region_counter[i.Region] += i.__getattribute__("Amount paid") #* i.Measure
 
 
 for reg in region_counter:
    print(reg, region_counter[reg])
    
+print(sum(region_counter[reg] for reg in region_counter))
+   
+
+# Jag har ju ett problem, i att jag producerar ut MER värde än vi fått ut i våra mail. Det skulle kunna vara så att jag 
+# också måste ta fram alla dubletter och helt enkelt räkna bort dem? Hur gör vi det? Jag får fundera.
+# Det finns ett HAVING keyword, some can användas på t.ex. 
+
+# Jag börjar få en bild av vad problemet kan vara gällande skillnaden i siffror. 1. Man har INTE räknat med measure. Det verkar udda och jag tror det 
+# blir fel. Men vi släpper den. 2. JAG har en Region Jönköping som är MYCKET större än den de har i sina siffror. Jag har nog i min sifferanalys INTE
+# en storecheck som har alla butiker där de "ska" vara. i.e. när ett kort aktiveras läggs det in i tabellen storecheck. Om butiken sedan byter plats
+# i telenor.storecheck.se så uppdateras ju inte Storecheck tabellen. Den har ju bara sparat ned vilken butik och region kortet var i DÅ.
+# Så när en butik byter region så ändras ju såklart inte tabellen i databasen. Den har kvar rätt butik, men FEL region. Jag får se om jag kan
+# komma på ett sätt runt detta. 
