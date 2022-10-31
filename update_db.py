@@ -19,11 +19,12 @@ cursor = conn.cursor()
 
 cursor.execute('CREATE TABLE Test (MSISDN INTEGER, Region TEXT(100))')
 
-with open('C:\Code\Python\store_2022-09-01_2022-09-30.csv', "r") as csvfile:
+with open('C:\Code\Projects\Varde\csv_files\combined-csv.csv', "r") as csvfile:
     file = csv.reader(csvfile, delimiter=",")
     next(file, None)
     for i in file:
-        cursor.execute("INSERT INTO Test (MSISDN, Region) VALUES (?, ?);", (i[0], i[3]))
+        if i[0].isdigit():
+            cursor.execute("INSERT INTO Test (MSISDN, Region) VALUES (?, ?);", (i[0], i[3]))
 
 cursor.execute("SELECT * FROM Test")
 for i in cursor:

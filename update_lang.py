@@ -32,16 +32,17 @@ cursor = conn.cursor()
 
 cursor.execute('CREATE TABLE Updated_Store (MSISDN INTEGER, Region TEXT(100), Activated DATE, Store TEXT(255))')
 
-with open('C:\Code\Python\store_2022-09-01_2022-09-30.csv', "r") as csvfile:
+with open('C:\Code\Projects\Varde\csv_files\combined-csv.csv', "r") as csvfile:
     file = csv.reader(csvfile, delimiter=",")
     next(file, None)
     for i in file:
-        cursor.execute("INSERT INTO Updated_Store (MSISDN, Region, Activated, Store) VALUES (?, ?, ?, ?);", (i[0], i[3], i[2], i[5]))
+        if i[0].isdigit():
+            cursor.execute("INSERT INTO Updated_Store (MSISDN, Region, Activated, Store) VALUES (?, ?, ?, ?);", (i[0], i[3], i[2], i[5]))
 
 
 cursor.execute(
-    'SELECT DISTINCT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
-    'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
+    'SELECT DISTINCT Laddningsdata.MSISDN, Store, Updated_Store.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+    'FROM (Laddningsdata INNER JOIN Updated_Store ON Laddningsdata.MSISDN=Updated_Store.MSISDN) '
     'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
     f'WHERE "Topup date" between #{from_date}# and #{to_date}#'
     f'AND Activated between #{from_date - relativedelta(years=1)}# and #{to_date}# '
@@ -64,4 +65,7 @@ print(f"Totalt: {sum(region_counter[reg] for reg in region_counter)}")
 # göra en tabell med de nya numrerna och updatera Storecheck, men då löser vi ju ändå bara 
 # kort en månad bakåt. Inte längre än så. Såatteh.... bara att exporta ut året bakåt om det ska bli helt 
 # korrekt. Det finns ett problem där dock. Det tar tid och servern gör en timeout. Vi får helt enkelt fundera 
-# lite på detta.
+# lite på detta. i.e. vi får ju ett problem om vi ska ha siffror tillbaka en viss tid liksom.
+
+# Vi får kolla på möjligheten att kombinera csv filerna. Det betyder att man kommer behöva hämta ner 12 st csv filer för att få allting korrekt,
+# Men det kanske det är värt?
