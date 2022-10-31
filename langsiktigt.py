@@ -6,9 +6,9 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 conn = pyodbc.connect(
-r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-r'DBQ=C:\Code\Projects\master_database.accdb;'
-)
+    r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
+    r'DBQ=C:\Code\Projects\master_database.accdb;'
+    )
 cursor = conn.cursor()
 
 from_date = datetime.date(2022, 9, 1)
@@ -35,7 +35,10 @@ cursor.execute(
  
 region_counter = Counter()
 for i in cursor:
-        region_counter[i.Region] += i.__getattribute__("Amount paid") #* i.Measure
+    # Vi hade kunnat multiplicera värdet med measure, som jag tror är antal laddningar. MEN det har inte gjorts förut, 
+    # så vi väljer bort detta för att hålla datan konsekvent mot hur den togs fram tidigare. För det kan vara så att
+    # Amount paid innehåller det totala värdet för antalet laddningar (dock verkar det inte så)
+    region_counter[i.Region] += i.__getattribute__("Amount paid") #* i.Measure 
 
 
 for reg in region_counter:

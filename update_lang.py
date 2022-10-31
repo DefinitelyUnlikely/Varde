@@ -69,3 +69,5 @@ print(f"Totalt: {sum(region_counter[reg] for reg in region_counter)}")
 
 # Vi får kolla på möjligheten att kombinera csv filerna. Det betyder att man kommer behöva hämta ner 12 st csv filer för att få allting korrekt,
 # Men det kanske det är värt?
+
+# Med dem kombinerade så funkar det. Jag får värden som stämmer bra överens med det man skickat ut. 
