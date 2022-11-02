@@ -1,6 +1,7 @@
 import pyodbc
 import tkinter as tk
-import datetime
+import time
+import csv
 from tkinter import filedialog
 from tkinter import ttk
 from tkcalendar import Calendar
@@ -11,11 +12,19 @@ def connect_db():
     global conn, cursor
     file_path = filedialog.askopenfilename()
     conn = pyodbc.connect(
-    r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-    f'DBQ={file_path};'
-    )
+        r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
+        f'DBQ={file_path};'
+        )
     cursor = conn.cursor()
-    print("connected")
+    connLabel = tk.Label(text="Databas ansluten")
+    connLabel.place(x=50, y=260)
+    
+
+def import_csv():
+    global csv_path
+    csv_path = filedialog.askopenfilename()
+    csvLabel = tk.Label(text="CSV Importerad")
+    csvLabel.place(x=50, y=290)
     
 
 def calculate_option():
@@ -30,37 +39,80 @@ def calculate_option():
                    }
     volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
     
-    if var.get() == 1:
-        print("Currently Testing Regionlista")
+    
+    def update_table():
+        startLabel = tk.Label(text="Påbörjar uppdatering av regioner")
+        startLabel.place(x=50, y=320)
+        startLabel.update_idletasks()
         
-        # Då .get_date() är ett string objekt blev det svårt att använda timedelta etc. Synd, det är nog en bättre 
-        # lösning egentligen. Men detta verkar funka. Vi får hålla lite koll på detta och edge cases (typ skottår)
-        one_year_earlier = str(int(to_cal.get_date()[-2:]) - 1)
-        earlier_string = f"{to_cal.get_date()[:-2]}{one_year_earlier}"
+        cursor.execute('CREATE TABLE Updated_Store (MSISDN INTEGER, Region TEXT(100), Activated DATE, Store TEXT(255))')
+
+        with open(csv_path, "r") as csvfile:
+            file = csv.reader(csvfile, delimiter=",")
+            next(file, None)
+            for i in file:
+                if i[0].isdigit():
+                    cursor.execute("INSERT INTO Updated_Store (MSISDN, Region, Activated, Store) VALUES (?, ?, ?, ?);", (i[0], i[3], i[2], i[5]))
+        
+        startLabel['text'] = "Klar med uppdatering av regioner, påbörjar kalkyl"            
+    
+    
+    def longterm():
         
         cursor.execute(
-            'SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
-            'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
-            'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
-            f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
-            f'AND Activated between #{earlier_string}# and #{to_cal.get_date()}# '
-            )
+        'SELECT Laddningsdata.MSISDN, Store, Updated_Store.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+        'FROM (Laddningsdata INNER JOIN Updated_Store ON Laddningsdata.MSISDN=Updated_Store.MSISDN) '
+        'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+        f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
+        f'AND Activated between #{earlier_string}# and #{to_cal.get_date()}# '
+        )
         
-        for i in cursor.fetchone():
-            print(i)
 
-        #region_map = Counter()
-        #store_map = Counter()
-        #for i in cursor.fetchall():
-        #    region_map[i.Region] += i.Measure * i.__getattribute__('Amount paid')
-        #    store_map[i.Store] += i.Measure * i.__getattribute__('Amount paid')
+        region_map = Counter()
+        store_map = Counter()
+        for i in cursor:
+            paid = i.__getattribute__('Amount paid')
+            region_map[i.Region] += paid
+            store_map[i.Store] += paid
 
+        doneLabel = tk.Label(text="Klar med kalkyl, programmet kan stängas")
+        doneLabel.place(x=50, y=350)
 
-        #for reg in region_map:
-        #    print(reg, region_map[reg])
+        for reg in region_map:
+            print(reg, region_map[reg])
+        
+        print(f"Totalt: {sum(region_map[reg] for reg in region_map)}")
+        
+    
+    def first_charge():
+        pass
+    
+    
+    def gross_adds():
+        pass
+        
+        
+    
+    
+    if var.get() == 1:
+        print("Currently Testing Regionlista")
+                
+        # Då .get_date() är ett string objekt blev det svårt att använda timedelta etc. Synd, det är nog en bättre 
+        # lösning egentligen. Men detta verkar funka. Vi får hålla lite koll på detta och edge cases (typ skottår)
+        one_year_earlier = str(int(from_cal.get_date()[-2:]) - 1)
+        earlier_string = f"{from_cal.get_date()[:-2]}{one_year_earlier}"
+        
+        longterm()
+        
+
 
     if var.get() == 2:
         print("Currently Testing Butikslista")
+        
+        # Då .get_date() är ett string objekt blev det svårt att använda timedelta etc. Synd, det är nog en bättre 
+        # lösning egentligen. Men detta verkar funka. Vi får hålla lite koll på detta och edge cases (typ skottår)
+        one_year_earlier = str(int(from_cal.get_date()[-2:]) - 1)
+        earlier_string = f"{from_cal.get_date()[:-2]}{one_year_earlier}"
 
 
 def quit_program():
@@ -94,11 +146,15 @@ radio1.place(x=600, y=50)
 radio2.place(x=600, y=70)
 radioLabel = tk.Label(calculate, text="Välj typ av output").place(x=600, y=20)
 
-importButton = tk.Button(calculate, text="Välj databas", command=connect_db)
+importButton = tk.Button(calculate, text="Välj databas", command=connect_db, bg="lightblue")
 importButton.place(x=20, y=420)
 importButton.configure(border=2, relief="raised")
 
-calculateButton = tk.Button(calculate, text="Kalkylera", command=calculate_option)
+csvButton = tk.Button(calculate, text="Välj csv fil", command=import_csv, bg="lightblue")
+csvButton.place(x=100, y=420)
+csvButton.configure(border=2, relief="raised")
+
+calculateButton = tk.Button(calculate, text="Kalkylera", command=calculate_option, bg="lightblue")
 calculateButton.place(x=600, y=200)
 
 quitButton = tk.Button(text="Exit", command=quit_program, fg="mint cream", bg="DarkOrange3")
@@ -112,6 +168,8 @@ from_cal.place(x=50, y=50)
 to_cal_label = tk.Label(calculate, text="Till Datum").place(x=320, y=20)
 to_cal = Calendar(calculate)
 to_cal.place(x=320, y=50)
+
+
 
 
 instructionsText = """

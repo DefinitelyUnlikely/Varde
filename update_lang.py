@@ -51,7 +51,7 @@ cursor.execute(
  
 region_counter = Counter()
 for i in cursor:
-        region_counter[i.Region] += i.__getattribute__("Amount paid") #* i.Measure
+    region_counter[i.Region] += i.__getattribute__("Amount paid") #* i.Measure
 
 
 for reg in region_counter:
