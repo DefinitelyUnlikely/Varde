@@ -121,3 +121,11 @@ laddningen för ett kort, men numret har återanvänts (och då skulle kunna ha 
 
 Detta är väl möjligtvis något vi hade kunnat göra DIREKT i python, istället för med en SQL query. Det är nog kanske till och med enklare
 om jag kan lösa att datumen som kommer ut från calendern funkar. Vi får jobba på det.
+
+
+        for reg in self.region_map:
+            print(reg, self.region_map[reg])
+            
+        print(f"Totalt: {sum(self.region_map[reg] for reg in self.region_map)}")
+        
+        print(f"Totalt på förladdat: {sum(self.region_preloaded_map[reg] for reg in self.region_preloaded_map)}")
