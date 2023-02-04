@@ -57,30 +57,40 @@ class DatabaseAnalyzer():
         csvLabel.place(x=50, y=290)
         
 
+    def export_to_excel(self):
+        # Plans for this function: 
+        # Make it export everything into one excel file, with sheets for:
+        # 1. Long term value, region wise and store wise, 2. first top up value for stores and regions, 3. gross adds for stores and regions
+
+        # I want to use pandas and write to several sheets, so we need to create an excel writer. We also need to create Pandas dataframes with the 
+        # data I want to populate my excel file with. Let's keep the creating of the dataframes in this functino for now, but they might be 
+        # more logically placed in each calulating function.
+        self.long_term_df.to_excel('testingpandas.xlsx')
+    
+    
+    def update_table(self):
+        """
+        Takes a CSV with updated region/store names from Storecheck, for the period one wants to analyze. 
+        Creates a new updated table of all stores wwhich can then be joined with the current database. 
+        
+        """
+        startLabel = tk.Label(text="Påbörjar uppdatering av regioner")
+        startLabel.place(x=50, y=320)
+        startLabel.update_idletasks()
+        
+        self.cursor.execute('CREATE TABLE Updated_Store (MSISDN INTEGER, Region TEXT(100), Activated DATE, Store TEXT(255))')
+
+        with open(self.csv_path, "r") as csvfile:
+            file = csv.reader(csvfile, delimiter=",")
+            next(file, None)
+            for i in file:
+                if i[0].isdigit():
+                    self.cursor.execute("INSERT INTO Updated_Store (MSISDN, Region, Activated, Store) VALUES (?, ?, ?, ?);", (i[0], i[3], i[2], i[5]))
+        
+        startLabel['text'] = "Klar med uppdatering av regioner"  
+    
     def calculate_option(self):
         
-        
-        def update_table(self):
-            """
-            Takes a CSV with updated region/store names from Storecheck, for the period one wants to analyze. 
-            Creates a new updated table of all stores wwhich can then be joined with the current database. 
-            
-            """
-            startLabel = tk.Label(text="Påbörjar uppdatering av regioner")
-            startLabel.place(x=50, y=320)
-            startLabel.update_idletasks()
-            
-            self.cursor.execute('CREATE TABLE Updated_Store (MSISDN INTEGER, Region TEXT(100), Activated DATE, Store TEXT(255))')
-
-            with open(self.csv_path, "r") as csvfile:
-                file = csv.reader(csvfile, delimiter=",")
-                next(file, None)
-                for i in file:
-                    if i[0].isdigit():
-                        self.cursor.execute("INSERT INTO Updated_Store (MSISDN, Region, Activated, Store) VALUES (?, ?, ?, ?);", (i[0], i[3], i[2], i[5]))
-            
-            startLabel['text'] = "Klar med uppdatering av regioner"  
-            
         
         def create_joined_table_longterm(self):
             """
@@ -135,8 +145,6 @@ class DatabaseAnalyzer():
             doneLabel.place(x=50, y=350)
             
             
-
- 
         def first_charge(self):
             """
             Calculates the value of first charges for a given period. First charges are those on MSISDNs not top up'ed prior or 
@@ -157,22 +165,14 @@ class DatabaseAnalyzer():
             
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):
-            update_table(self)
+            self.update_table(self)
             
         
         longterm(self)
         print(self.long_term_df)
         
         
-    def export_to_excel(self):
-        # Plans for this function: 
-        # Make it export everything into one excel file, with sheets for:
-        # 1. Long term value, region wise and store wise, 2. first top up value for stores and regions, 3. gross adds for stores and regions
-        
-        # I want to use pandas and write to several sheets, so we need to create an excel writer. We also need to create Pandas dataframes with the 
-        # data I want to populate my excel file with. Let's keep the creating of the dataframes in this functino for now, but they might be 
-        # more logically placed in each calulating function.
-        self.long_term_df.to_excel('testingpandas.xlsx')
+
 
         
         
