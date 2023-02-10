@@ -120,24 +120,21 @@ class DatabaseAnalyzer():
             # Start by making sure the right table is in our cursor, before iterating.
             create_joined_table_longterm(self)
 
-            self.region_map = Counter()
-            self.region_preloaded_map = Counter()
-            self.store_map = Counter()
-            self.store_preloaded_map = Counter()
+            region_map = Counter()
+            region_preloaded_map = Counter()
+            store_map = Counter()
+            store_preloaded_map = Counter()
             
             for i in self.cursor:
                 paid = i.__getattribute__('Amount paid')
-                self.region_map[i.Region] += paid
-                self.store_map[i.Store] += paid
+                region_map[i.Region] += paid
+                store_map[i.Store] += paid
                 if i.Artikel in self.preloaded_cards:
-                    self.region_preloaded_map[i.Region] += paid
-                    self.store_preloaded_map[i.Store] += paid
+                    region_preloaded_map[i.Region] += paid
+                    store_preloaded_map[i.Store] += paid
                     
-            self.long_term_df = pd.DataFrame.from_dict(self.region_map, orient='index')
-            self.long_term_stores = pd.DataFrame.from_dict(self.store_map, orient="index")
-
-            doneLabel = tk.Label(text="Klar med kalkyl, programmet kan stängas")
-            doneLabel.place(x=50, y=350)
+            self.long_term_df = pd.DataFrame.from_dict(region_map, orient='index')
+            self.long_term_stores = pd.DataFrame.from_dict(store_map, orient="index")
             
             
         def first_charge(self):
@@ -145,14 +142,43 @@ class DatabaseAnalyzer():
             Calculates the value of first charges for a given period. First charges are those on MSISDNs not top up'ed prior or 
             not top up'ed the last year.
             """
-            pass
-        
+            self.cursor.execute('SELECT * FROM Storecheck '
+                                f'WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#')
+            
+            first_dict = {}
+            for i in self.cursor:
+                first_dict.update({i[0]: {"Region": i[3], "Store": i[5], "Activated": i[2], "Date": "N/A", "Amount": 0}})
+            
+            self.cursor.execute('SELECT MSISDN, "Topup date", "Amount paid" FROM Laddningsdata '
+               f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#')
+            
+            for i in self.cursor:
+                if i[0] in first_dict:
+                    if first_dict[i[0]]["Date"] == "N/A" or first_dict[i[0]]["Date"] > i[1]:
+                        first_dict[i[0]]["Date"] = i[1]
+                        first_dict[i[0]]["Amount"] = i[2]
+            
+            region_first = Counter()
+            store_first = Counter()
+            for i in first_dict.values():
+                region_first[i["Region"]] += i["Amount"]
+                store_first[i["Store"]] += i["Amount"]
         
         def gross_adds(self):
             """
             Calculates the amount of added RGUs for a given period.
             """
-            self.cursor.execute(f'SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#')
+            self.cursor.execute(f'SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
+            
+            region_gross = Counter()
+            store_gross = Counter()
+            for i in self.cursor:
+                region_gross[i.Region] += 1
+                store_gross[i.Store] += 1
+                
+            
+            
+            
             
         # Get/create relevent dates in working format.
         one_year_earlier = str(int(from_cal.get_date()[-2:]) - 1)
@@ -166,6 +192,9 @@ class DatabaseAnalyzer():
         longterm(self)
         print(self.long_term_df)
         print("Totalt:" + str(self.long_term_df.sum()))
+        
+        doneLabel = tk.Label(text="Klar med kalkyl")
+        doneLabel.place(x=50, y=350)
         
         
 
