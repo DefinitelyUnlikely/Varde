@@ -1,6 +1,7 @@
 import pyodbc
 import tkinter as tk
-import time
+import datetime
+from dateutil.relativedelta import relativedelta
 import csv
 from tkinter import filedialog
 from tkinter import ttk
@@ -58,13 +59,16 @@ class DatabaseAnalyzer():
         
 
     def export_to_excel(self):
-        # Plans for this function: 
-        # Make it export everything into one excel file, with sheets for:
-        # 1. Long term value, region wise and store wise, 2. first top up value for stores and regions, 3. gross adds for stores and regions
-
-        # I want to use pandas and write to several sheets, so we need to create an excel writer. We also need to create Pandas dataframes with the 
-        # data I want to populate my excel file with. Let's keep the creating of the dataframes in this functino for now, but they might be 
-        # more logically placed in each calulating function.
+        # Alright. We need to create an excel file with a sheet for each type of data. 
+        # sheet 1: Longterm for regions
+        # sheet 2: Gross adds for regions
+        # sheet 3: First charge for regions
+        
+        # sheet 4: Longterm for each store
+        # sheet 5: Gross adds for each store
+        # sheet 6: First charge for each store
+        
+        
         self.long_term_df.to_excel('testingpandas.xlsx')
     
     
@@ -102,12 +106,15 @@ class DatabaseAnalyzer():
             """
             Calls relevent SQL queries on the database, to join together the required data for further extraction by other functions.
             """
+            
+            one_year_earlier = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(years=1)
+            
             self.cursor.execute(
             'SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
             'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
             'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
             f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
-            f'AND Activated between #{earlier_string}# and #{to_cal.get_date()}# '
+            f'AND Activated between #{one_year_earlier}# and #{to_cal.get_date()}# '
             )          
         
         
@@ -149,8 +156,11 @@ class DatabaseAnalyzer():
             for i in self.cursor:
                 first_dict.update({i[0]: {"Region": i[3], "Store": i[5], "Activated": i[2], "Date": "N/A", "Amount": 0}})
             
+            
+            day_before_from = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(days=1)
+            
             self.cursor.execute('SELECT MSISDN, "Topup date", "Amount paid" FROM Laddningsdata '
-               f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#')
+               f'WHERE "Topup date" between #{day_before_from}# and #{to_cal.get_date()}#')
             
             for i in self.cursor:
                 if i[0] in first_dict:
@@ -163,6 +173,10 @@ class DatabaseAnalyzer():
             for i in first_dict.values():
                 region_first[i["Region"]] += i["Amount"]
                 store_first[i["Store"]] += i["Amount"]
+                
+            self.first_region_df = pd.DataFrame(region_first, orient="index")   
+            self.store_first_df = pd.DataFrame(store_first, orient="index")
+        
         
         def gross_adds(self):
             """
@@ -176,20 +190,18 @@ class DatabaseAnalyzer():
                 region_gross[i.Region] += 1
                 store_gross[i.Store] += 1
                 
+            self.gross_stores_df = pd.DataFrame.from_dict(store_gross ,orient='index')
+            self.gross_regions_df = pd.DataFrame.from_dict(region_gross ,orient='index')
             
-            
-            
-            
-        # Get/create relevent dates in working format.
-        one_year_earlier = str(int(from_cal.get_date()[-2:]) - 1)
-        earlier_string = f"{from_cal.get_date()[:-2]}{one_year_earlier}"
-            
+                
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):
             self.update_table()
             
         
         longterm(self)
+        first_charge(self)
+        gross_adds(self)
         print(self.long_term_df)
         print("Totalt:" + str(self.long_term_df.sum()))
         
