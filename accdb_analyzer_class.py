@@ -174,8 +174,8 @@ class DatabaseAnalyzer():
                 region_first[i["Region"]] += i["Amount"]
                 store_first[i["Store"]] += i["Amount"]
                 
-            self.first_region_df = pd.DataFrame(region_first, orient="index")   
-            self.store_first_df = pd.DataFrame(store_first, orient="index")
+            self.first_region_df = pd.DataFrame.from_dict(region_first, orient="index")   
+            self.store_first_df = pd.DataFrame.from_dict(store_first, orient="index")
         
         
         def gross_adds(self):
