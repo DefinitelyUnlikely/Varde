@@ -1,12 +1,11 @@
 import pyodbc
 import tkinter as tk
+from tkinter import filedialog, ttk
 import datetime
 from dateutil.relativedelta import relativedelta
 import csv
-from tkinter import filedialog
-from tkinter import ttk
 from tkcalendar import Calendar
-from collections import defaultdict, Counter
+from collections import Counter
 import pandas as pd
 
 
@@ -71,7 +70,7 @@ class DatabaseAnalyzer():
         # sheet 6: First charge for each store
         
         
-        self.long_term_df.to_excel('testingpandas.xlsx')
+        self.longterm_regions.to_excel('testingpandas.xlsx')
     
     
     def update_table(self):
@@ -138,8 +137,10 @@ class DatabaseAnalyzer():
                     region_preloaded_map[i.Region] += paid
                     store_preloaded_map[i.Store] += paid
                     
-            self.long_term_df = pd.DataFrame.from_dict(region_map, orient='index')
-            self.long_term_stores = pd.DataFrame.from_dict(store_map, orient="index")
+            self.longterm_regions = pd.DataFrame.from_dict(region_map, orient='index')
+            self.longterm_stores = pd.DataFrame.from_dict(store_map, orient="index")
+            self.longterm_pre_regions = pd.DataFrame.from_dict(region_preloaded_map, orient="index")
+            self.longterm_pre_stores = pd.DataFrame.from_dict(store_preloaded_map, orient="index")
             
             
         def first_charge(self):
@@ -147,12 +148,13 @@ class DatabaseAnalyzer():
             Calculates the value of first charges for a given period. First charges are those on MSISDNs not top up'ed prior or 
             not top up'ed the last year.
             """
-            self.cursor.execute('SELECT * FROM Storecheck '
+            self.cursor.execute('SELECT Storecheck.Number, Storecheck.Region, Storecheck.Store, Storecheck.Activated, SIM_kort.Artikel FROM Storecheck '
+                                'INNER JOIN SIM_kort ON Storecheck.Number=SIM_kort.MSISDN '
                                 f'WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#')
             
             first_dict = {}
             for i in self.cursor:
-                first_dict.update({i.Number: {"Region": i.Region, "Store": i.Store, "Activated": i.Activated, "Date": "N/A", "Amount": 0}})
+                first_dict.update({i.Number: {"Region": i.Region, "Store": i.Store, "Activated": i.Activated, "Date": "N/A", "Amount": 0, "Article": i.Artikel}})
             
             
             day_before_from = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(days=1)
@@ -168,13 +170,21 @@ class DatabaseAnalyzer():
             
             region_first = Counter()
             store_first = Counter()
+            region_first_pre = Counter()
+            store_first_pre = Counter()
             for i in first_dict.values():
                 region_first[i["Region"]] += i["Amount"]
                 store_first[i["Store"]] += i["Amount"]
+                if i["Article"] in self.preloaded_cards:
+                    region_first_pre[i["Region"]] += i["Amount"]
+                    store_first_pre[i["Store"]] += i["Amount"]
+                    
                 
             self.first_region_df = pd.DataFrame.from_dict(region_first, orient="index")   
             self.store_first_df = pd.DataFrame.from_dict(store_first, orient="index")
-        
+            self.region_first_pre_df = pd.DataFrame.from_dict(region_first_pre, orient="index")
+            self.store_first_pre_df = pd.DataFrame.from_dict(store_first_pre, orient="index")
+            
         
         def gross_adds(self):
             """
@@ -195,9 +205,10 @@ class DatabaseAnalyzer():
                     preloaded_region_gross[i.Region] += 1
                     preloaded_store_gross[i.Store] += 1
                 
-            self.gross_stores_df = pd.DataFrame.from_dict(store_gross ,orient='index')
-            self.gross_regions_df = pd.DataFrame.from_dict(region_gross ,orient='index')
-            
+            self.gross_stores_df = pd.DataFrame.from_dict(store_gross, orient='index')
+            self.gross_regions_df = pd.DataFrame.from_dict(region_gross, orient='index')
+            self.preloaded_gross_stores_df = pd.DataFrame.from_dict(preloaded_store_gross, orient='index')
+            self.preloaded_gross_regions_df = pd.DataFrame.from_dict(preloaded_region_gross, orient='index')
                 
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):
@@ -207,8 +218,8 @@ class DatabaseAnalyzer():
         longterm(self)
         first_charge(self)
         gross_adds(self)
-        print(self.long_term_df)
-        print("Totalt:" + str(self.long_term_df.sum()))
+        print(self.longterm_regions)
+        print("Totalt:" + str(self.longterm_regions.sum()))
         
         doneLabel = tk.Label(text="Klar med kalkyl")
         doneLabel.place(x=50, y=350)
