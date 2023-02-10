@@ -4,10 +4,12 @@ import pyodbc
 from collections import defaultdict, Counter
 import datetime
 from dateutil.relativedelta import relativedelta
+import pandas as pd
+from openpyxl import load_workbook, Workbook
 
 conn = pyodbc.connect(
 r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-r'DBQ=C:\Code\Projects\master_database.accdb;'
+r'DBQ=C:\Code\Projects\master_update.accdb;'
 )
 cursor = conn.cursor()
 
@@ -29,12 +31,20 @@ cursor.execute('SELECT * FROM Storecheck '
                f'WHERE Activated between #{from_date}# and #{to_date}#')
 
 
+store_map = Counter()
 gross_map = Counter()
 for i in cursor:
     gross_map[i.Region] += 1
-    
+    store_map[i.Store] += 1
+
+total = 0
 for reg, val in gross_map.items():
+    total += val
     print(reg, val)
+
+print(total)
+
+
 
 
 # Hur löser jag gross? I det fallet är det väl absolut bäst att bara göra en query mot Storecheck

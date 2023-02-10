@@ -13,20 +13,27 @@ import csv
 
 conn = pyodbc.connect(
 r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-r'DBQ=C:\Code\Projects\master_database_copy.accdb;'
+r'DBQ=C:\Code\Projects\master_update.accdb;'
 )
 cursor = conn.cursor()
 
-cursor.execute('CREATE TABLE Test (MSISDN INTEGER, Region TEXT(100))')
+# cursor.execute('CREATE TABLE Updated_Store (MSISDN INTEGER, Region TEXT(100), Activated DATE, Store TEXT(255))')
 
-with open('C:\Code\Projects\Varde\csv_files\combined-csv.csv', "r") as csvfile:
-    file = csv.reader(csvfile, delimiter=",")
-    next(file, None)
-    for i in file:
-        if i[0].isdigit():
-            cursor.execute("INSERT INTO Test (MSISDN, Region) VALUES (?, ?);", (i[0], i[3]))
 
-cursor.execute("SELECT * FROM Test")
-for i in cursor:
-    print(i)
+# with open('C:\Code\Projects\Varde\csv_files\combined-csv.csv', "r") as csvfile:
+#     file = csv.reader(csvfile, delimiter=",")
+#     next(file, None)
+#     for i in file:
+#         if i[0].isdigit():
+#             cursor.execute("INSERT INTO Updated_Store (MSISDN, Region, Activated, Store) VALUES (?, ?, ?, ?);", (i[0], i[3], i[2], i[5]))
+            
+# cursor.commit()
+
+
+cursor.execute("UPDATE Storecheck "
+               "INNER JOIN Updated_Store ON Storecheck.Number=Updated_Store.MSISDN "
+               "SET Storecheck.Activated = Updated_Store.Activated, Storecheck.Region = Updated_Store.Region, Storecheck.Store = Updated_Store.Store "
+               "WHERE Storecheck.Number = Updated_Store.MSISDN;")
+
+cursor.commit()
 

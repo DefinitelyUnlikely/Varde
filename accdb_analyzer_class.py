@@ -71,7 +71,7 @@ class DatabaseAnalyzer():
     def update_table(self):
         """
         Takes a CSV with updated region/store names from Storecheck, for the period one wants to analyze. 
-        Creates a new updated table of all stores wwhich can then be joined with the current database. 
+        Creates a new updated table of all stores which can then be joined with the current database. 
         
         """
         startLabel = tk.Label(text="Påbörjar uppdatering av regioner")
@@ -87,6 +87,12 @@ class DatabaseAnalyzer():
                 if i[0].isdigit():
                     self.cursor.execute("INSERT INTO Updated_Store (MSISDN, Region, Activated, Store) VALUES (?, ?, ?, ?);", (i[0], i[3], i[2], i[5]))
         
+        # Update the Storecheck table with the new data               
+        self.cursor.execute("UPDATE Storecheck "
+               "INNER JOIN Updated_Store ON Storecheck.Number=Updated_Store.MSISDN "
+               "SET Storecheck.Activated = Updated_Store.Activated, Storecheck.Region = Updated_Store.Region, Storecheck.Store = Updated_Store.Store "
+               "WHERE Storecheck.Number = Updated_Store.MSISDN;")
+        
         startLabel['text'] = "Klar med uppdatering av regioner"  
     
     def calculate_option(self):
@@ -96,28 +102,16 @@ class DatabaseAnalyzer():
             """
             Calls relevent SQL queries on the database, to join together the required data for further extraction by other functions.
             """
-            
-            # If we have created an updated table for stores and regions, we use this query.
-            if hasattr(self, 'csv_path'):
-                self.cursor.execute(
-                'SELECT Laddningsdata.MSISDN, Store, Updated_Store.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
-                'FROM (Laddningsdata INNER JOIN Updated_Store ON Laddningsdata.MSISDN=Updated_Store.MSISDN) '
-                'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
-                f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
-                f'AND Activated between #{earlier_string}# and #{to_cal.get_date()}# '
-                )
-            # Otherwise, we want to use a query where we join to the original table containing store info instead.
-            else:
-                self.cursor.execute(
-                'SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
-                'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
-                'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
-                f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
-                f'AND Activated between #{earlier_string}# and #{to_cal.get_date()}# '
-                )          
+            self.cursor.execute(
+            'SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+            'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
+            'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+            f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
+            f'AND Activated between #{earlier_string}# and #{to_cal.get_date()}# '
+            )          
         
         
-        def longterm(self):
+        def longterm(self): 
             """
             calculates the longterm/total value of all top ups for a given period. "longterm" is including 
             all top ups on cards less than a year old, including cards getting their first top up.
@@ -140,6 +134,7 @@ class DatabaseAnalyzer():
                     self.store_preloaded_map[i.Store] += paid
                     
             self.long_term_df = pd.DataFrame.from_dict(self.region_map, orient='index')
+            self.long_term_stores = pd.DataFrame.from_dict(self.store_map, orient="index")
 
             doneLabel = tk.Label(text="Klar med kalkyl, programmet kan stängas")
             doneLabel.place(x=50, y=350)
@@ -157,7 +152,7 @@ class DatabaseAnalyzer():
             """
             Calculates the amount of added RGUs for a given period.
             """
-             
+            self.cursor.execute(f'SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#')
             
         # Get/create relevent dates in working format.
         one_year_earlier = str(int(from_cal.get_date()[-2:]) - 1)
@@ -165,11 +160,12 @@ class DatabaseAnalyzer():
             
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):
-            self.update_table(self)
+            self.update_table()
             
         
         longterm(self)
         print(self.long_term_df)
+        print("Totalt:" + str(self.long_term_df.sum()))
         
         
 
@@ -254,3 +250,9 @@ root.mainloop()
 # returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated between Date() and DateAdd('M', -6, Date())")
 # returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated = #11/08/2018#") specifikt datum
 # Använd > eller < på istället för = om vi vill ha emellan vissa tider.
+
+
+# En fundering om korten och värde: Om vi tänker att jag laddar ett kort idag, kommer då laddningen in som att den gjordes idag? Och om det
+# kortet var nytt, kommer det då dyka upp först imorgon? Att kortet kommer först imorgon är jag rätt hundra på, aktiveringsdatum blir 
+# dagen filen laddas upp/skapas och det görs vid kl 8 efterföljande dag. Men hur är det för laddningen? Får den också dagen efter
+# som top up date, eller får den dagen som laddningen gjordes? Detta är relevant för hur vi räknar ut i alla fall de första laddningarna.
