@@ -10,6 +10,8 @@ from collections import defaultdict, Counter
 import pandas as pd
 
 
+# TODO: You need to join the table SIM_kort to all your queries so that you may check if a card comes precharged.
+# TODO: Fix an export to a single Excel file and order all the stuff nicely.
 
 class DatabaseAnalyzer():
     
@@ -76,8 +78,8 @@ class DatabaseAnalyzer():
         """
         Takes a CSV with updated region/store names from Storecheck, for the period one wants to analyze. 
         Creates a new updated table of all stores which can then be joined with the current database. 
-        
         """
+        
         startLabel = tk.Label(text="Påbörjar uppdatering av regioner")
         startLabel.place(x=50, y=320)
         startLabel.update_idletasks()
@@ -119,11 +121,7 @@ class DatabaseAnalyzer():
         
         
         def longterm(self): 
-            """
-            calculates the longterm/total value of all top ups for a given period. "longterm" is including 
-            all top ups on cards less than a year old, including cards getting their first top up.
-            """
-            
+                    
             # Start by making sure the right table is in our cursor, before iterating.
             create_joined_table_longterm(self)
 
@@ -154,19 +152,19 @@ class DatabaseAnalyzer():
             
             first_dict = {}
             for i in self.cursor:
-                first_dict.update({i[0]: {"Region": i[3], "Store": i[5], "Activated": i[2], "Date": "N/A", "Amount": 0}})
+                first_dict.update({i.Number: {"Region": i.Region, "Store": i.Store, "Activated": i.Activated, "Date": "N/A", "Amount": 0}})
             
             
             day_before_from = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(days=1)
             
             self.cursor.execute('SELECT MSISDN, "Topup date", "Amount paid" FROM Laddningsdata '
-               f'WHERE "Topup date" between #{day_before_from}# and #{to_cal.get_date()}#')
+                                f'WHERE "Topup date" between #{day_before_from}# and #{to_cal.get_date()}#')
             
             for i in self.cursor:
-                if i[0] in first_dict:
-                    if first_dict[i[0]]["Date"] == "N/A" or first_dict[i[0]]["Date"] > i[1]:
-                        first_dict[i[0]]["Date"] = i[1]
-                        first_dict[i[0]]["Amount"] = i[2]
+                if i.MSISDN in first_dict:
+                    if first_dict[i.MSISDN]["Date"] == "N/A" or first_dict[i[0]]["Date"] > i[1]:
+                        first_dict[i.MSISDN]["Date"] = i.__getattribute__('Topup date')
+                        first_dict[i.MSISDN]["Amount"] = i.__getattribute__('Amount paid')
             
             region_first = Counter()
             store_first = Counter()
@@ -182,13 +180,20 @@ class DatabaseAnalyzer():
             """
             Calculates the amount of added RGUs for a given period.
             """
-            self.cursor.execute(f'SELECT * FROM Storecheck WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
+            self.cursor.execute('SELECT Storecheck.Number, Storecheck.Region, Storecheck.Store, SIM_kort.Artikel FROM Storecheck '
+                                'INNER JOIN SIM_kort ON Storecheck.Number=SIM_kort.MSISDN '
+                                f'WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
             
             region_gross = Counter()
             store_gross = Counter()
+            preloaded_region_gross = Counter()
+            preloaded_store_gross = Counter()
             for i in self.cursor:
                 region_gross[i.Region] += 1
                 store_gross[i.Store] += 1
+                if i.Artikel in self.preloaded_cards:
+                    preloaded_region_gross[i.Region] += 1
+                    preloaded_store_gross[i.Store] += 1
                 
             self.gross_stores_df = pd.DataFrame.from_dict(store_gross ,orient='index')
             self.gross_regions_df = pd.DataFrame.from_dict(region_gross ,orient='index')
@@ -214,6 +219,7 @@ class DatabaseAnalyzer():
         
         
 # Initialize an instance of the DatabaseAnalyzer class.
+# For use in your GUI.
 db_analyzer = DatabaseAnalyzer()
 
 root = tk.Tk()
@@ -277,23 +283,3 @@ instructionsLabel.place(x=50, y=50)
 
 
 root.mainloop()  
-
-
-
-# Väljer man butikslista så är planen liknande. Du kommer få ut en lista med mängden gross, kortsiktigt värde och långsiktigt värde 
-# för varje enskild butik.
-
-# NOTE: Vissa nummer har en extra etta i början. Den måste bort om vi skall jämföra nummer i olika tabeller.
-
-# https://support.microsoft.com/en-us/office/examples-of-using-dates-as-criteria-in-access-queries-aea83b3b-46eb-43dd-8689-5fc961f21762
-# returned_cursor.execute("SELECT * FROM Storecheck;") remember to make a SQL statement on the cursror before trying to use it.
-#returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated between Date() and Date()-14;") # Use Date() and Date()-number of days!!!
-# returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated between Date() and DateAdd('M', -6, Date())")
-# returned_cursor.execute("SELECT * FROM Storecheck WHERE Activated = #11/08/2018#") specifikt datum
-# Använd > eller < på istället för = om vi vill ha emellan vissa tider.
-
-
-# En fundering om korten och värde: Om vi tänker att jag laddar ett kort idag, kommer då laddningen in som att den gjordes idag? Och om det
-# kortet var nytt, kommer det då dyka upp först imorgon? Att kortet kommer först imorgon är jag rätt hundra på, aktiveringsdatum blir 
-# dagen filen laddas upp/skapas och det görs vid kl 8 efterföljande dag. Men hur är det för laddningen? Får den också dagen efter
-# som top up date, eller får den dagen som laddningen gjordes? Detta är relevant för hur vi räknar ut i alla fall de första laddningarna.
