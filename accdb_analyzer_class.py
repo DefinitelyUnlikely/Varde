@@ -9,7 +9,8 @@ from collections import Counter
 import pandas as pd
 
 
-# TODO: You need to join the table SIM_kort to all your queries so that you may check if a card comes precharged.
+
+# TODO: We would possibly want to check what regino each store is in before exporting it to excel, so that we keep that in a column as well.
 # TODO: Fix an export to a single Excel file and order all the stuff nicely.
 
 class DatabaseAnalyzer():
@@ -70,9 +71,22 @@ class DatabaseAnalyzer():
         # sheet 6: First charge for each store
         
         
-        self.longterm_regions.to_excel('testingpandas.xlsx')
-    
-    
+        # As we want multiple sheets, I need to create an excel writer.
+        file = filedialog.asksaveasfilename(defaultextension=".xlsx")
+        with pd.ExcelWriter(file) as writer:
+            self.longterm_regions.to_excel(writer, sheet_name="Långsiktigt Region")
+            self.first_region_df.to_excel(writer, sheet_name="Första laddning Region")
+            self.gross_regions_df.to_excel(writer, sheet_name="Gross Region")
+            
+            self.longterm_stores.to_excel(writer, sheet_name="Långsiktigt Butiker")
+            self.store_first_df.to_excel(writer, sheet_name="Första laddning Butiker")
+            self.gross_stores_df.to_excel(writer, sheet_name="Gross Butiker")
+            
+            for sheet in writer.sheets:
+                worksheet = writer.sheets[sheet]
+                worksheet.set_column('A:C', 40)
+            
+                        
     def update_table(self):
         """
         Takes a CSV with updated region/store names from Storecheck, for the period one wants to analyze. 
@@ -98,7 +112,9 @@ class DatabaseAnalyzer():
                "SET Storecheck.Activated = Updated_Store.Activated, Storecheck.Region = Updated_Store.Region, Storecheck.Store = Updated_Store.Store "
                "WHERE Storecheck.Number = Updated_Store.MSISDN;")
         
+        self.cursor.commit()
         startLabel['text'] = "Klar med uppdatering av regioner"  
+        
     
     def calculate_option(self):
         
@@ -191,7 +207,7 @@ class DatabaseAnalyzer():
             Calculates the amount of added RGUs for a given period.
             """
             self.cursor.execute('SELECT Storecheck.Number, Storecheck.Region, Storecheck.Store, SIM_kort.Artikel FROM Storecheck '
-                                'INNER JOIN SIM_kort ON Storecheck.Number=SIM_kort.MSISDN '
+                                'LEFT OUTER JOIN SIM_kort ON Storecheck.Number=SIM_kort.MSISDN '
                                 f'WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
             
             region_gross = Counter()
