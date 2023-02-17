@@ -116,29 +116,20 @@ class DatabaseAnalyzer():
         startLabel['text'] = "Klar med uppdatering av regioner"  
         
     
-    def calculate_option(self):
+    def calculate_option(self):     
         
-        
-        def create_joined_table_longterm(self):
-            """
-            Calls relevent SQL queries on the database, to join together the required data for further extraction by other functions.
-            """
-            
+        def longterm(self): 
+                    
+            # Start by making sure the right table is in our cursor, before iterating.
             one_year_earlier = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(years=1)
             
             self.cursor.execute(
             'SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
             'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
-            'INNER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+            'LEFT OUTER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
             f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
             f'AND Activated between #{one_year_earlier}# and #{to_cal.get_date()}# '
-            )          
-        
-        
-        def longterm(self): 
-                    
-            # Start by making sure the right table is in our cursor, before iterating.
-            create_joined_table_longterm(self)
+            )     
 
             region_map = Counter()
             region_preloaded_map = Counter()
@@ -165,7 +156,7 @@ class DatabaseAnalyzer():
             not top up'ed the last year.
             """
             self.cursor.execute('SELECT Storecheck.Number, Storecheck.Region, Storecheck.Store, Storecheck.Activated, SIM_kort.Artikel FROM Storecheck '
-                                'INNER JOIN SIM_kort ON Storecheck.Number=SIM_kort.MSISDN '
+                                'LEFT OUTER JOIN SIM_kort ON Storecheck.Number=SIM_kort.MSISDN '
                                 f'WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#')
             
             first_dict = {}
