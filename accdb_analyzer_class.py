@@ -117,6 +117,7 @@ class DatabaseAnalyzer():
 
             for i in self.cursor:
                 paid = i.__getattribute__("Amount paid")
+                
                 if i.Artikel in self.empty_cards:
                     region_default[i.Region]['Tomma'] += paid
                     store_default[i.Store]['Tomma'] += paid
@@ -127,8 +128,8 @@ class DatabaseAnalyzer():
                     store_default[i.Store]['Förladdade'] += paid
                     store_default[i.Store].setdefault('Region', i.Region)
                     
-            self.region_longterm = pd.DataFrame.from_dict(region_default, orient='index')[['Tomma', 'Förladdade']]
-            self.store_longterm = pd.DataFrame.from_dict(store_default, orient='index')[['Tomma', 'Förladdade', 'Region']]
+            self.region_longterm_df = pd.DataFrame.from_dict(region_default, orient='index')[['Tomma', 'Förladdade']]
+            self.store_longterm_df = pd.DataFrame.from_dict(store_default, orient='index')[['Tomma', 'Förladdade', 'Region']]
             
             
         def first_charge(self):
@@ -156,6 +157,18 @@ class DatabaseAnalyzer():
                     if first_dict[i.MSISDN]["Date"] == "N/A" or first_dict[i.MSISDN]["Date"] > i.__getattribute__('Topup date'):
                         first_dict[i.MSISDN]["Date"] = i.__getattribute__('Topup date')
                         first_dict[i.MSISDN]["Amount"] = i.__getattribute__('Amount paid')
+                        
+            region_first = Counter()
+            store_first = defaultdict(dict)
+            for number in first_dict.values():
+                region_first[number["Region"]] += number["Amount"]
+                store_first[number["Store"]].setdefault("Region", number["Region"])
+                store_first[number["Store"]].setdefault("Värde", 0)
+                store_first[number["Store"]]["Värde"] += number["Amount"]
+                
+            self.store_first_df = pd.DataFrame.from_dict(store_first, orient="index")[['Värde', 'Region']]
+            self.region_first_df = pd.DataFrame.from_dict(region_first, orient="index")
+            self.region_first_df.columns = ['Värde']
                     
         
         def gross_adds(self):
@@ -166,21 +179,23 @@ class DatabaseAnalyzer():
                                 'LEFT OUTER JOIN SIM_kort ON Storecheck.Number=SIM_kort.MSISDN '
                                 f'WHERE Activated between #{from_cal.get_date()}# and #{to_cal.get_date()}#;')
             
-            region_gross = Counter()
-            store_gross = Counter()
-            preloaded_region_gross = Counter()
-            preloaded_store_gross = Counter()
+            store_default = defaultdict(Counter)
+            region_default = defaultdict(Counter)
             for i in self.cursor:
-                region_gross[i.Region] += 1
-                store_gross[i.Store] += 1
-                if i.Artikel in self.preloaded_cards:
-                    preloaded_region_gross[i.Region] += 1
-                    preloaded_store_gross[i.Store] += 1
                 
-            self.gross_stores_df = pd.DataFrame.from_dict(store_gross, orient='index')
-            self.gross_regions_df = pd.DataFrame.from_dict(region_gross, orient='index')
-            self.preloaded_gross_stores_df = pd.DataFrame.from_dict(preloaded_store_gross, orient='index')
-            self.preloaded_gross_regions_df = pd.DataFrame.from_dict(preloaded_region_gross, orient='index')
+                if i.Artikel in self.empty_cards:
+                    store_default[i.Store]["Tomma"] += 1
+                    store_default[i.Store].setdefault("Region", i.Region)
+                    region_default[i.Region]["Tomma"] += 1
+
+                if i.Artikel in self.preloaded_cards:
+                    store_default[i.Store]["Förladdade"] += 1
+                    store_default[i.Store].setdefault("Region", i.Region)
+                    region_default[i.Region]["Förladdade"] += 1
+                    
+
+            self.store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Region']]
+            self.region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade']]
                 
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):

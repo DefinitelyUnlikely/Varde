@@ -4,6 +4,7 @@ import pyodbc
 from collections import defaultdict, Counter
 import datetime
 from dateutil.relativedelta import relativedelta
+import pandas as pd
 
 conn = pyodbc.connect(
 r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
@@ -44,25 +45,14 @@ for i in cursor:
             first_dict[i.MSISDN]["Amount"] = i.__getattribute__('Amount paid')
 
 region_first = Counter()
-store_first = Counter()
-for i in first_dict.values():
-    region_first[i["Region"]] += i["Amount"]
-    store_first[i["Store"]] += i["Amount"]
+store_first = defaultdict(dict)
+for number in first_dict.values():
+    region_first[number["Region"]] += number["Amount"]
+    store_first[number["Store"]].setdefault("Region", number["Region"])
+    store_first[number["Store"]].setdefault("Värde", 0)
+    store_first[number["Store"]]["Värde"] += number["Amount"]
     
-total = 0
-for i in region_first:
-    print(i, region_first[i])
-    total += region_first[i]
-    
-print(total)
-
-# Alright. Första laddning. En topup har ett topup datum. Det är kopplat till ett nummer. Det numret hittar jag också i Storecheck. 
-# I Storecheck kommer numret ha ett Aktiverat datum. Om topupen skedde tidigare eller samma dag som aktiveringen, så är det första laddningen.
-# Är topupen senare än aktiveringen är det inte första laddningen på kortet.
-
-
-# Just nu tänker jag så här: Vi tar fram alla gross för perioden. Vi tar fram alla laddningar för perioden och ett år tillbaka. 
-# Vi gör en dictionary som ser ut typ såhär: {number: {date: , topup: , activated: ,}}. och fyller den med relevant info. 
-# Sedan gör vi så att vi går igenom laddningsdatan och fyller på med datum och värde. Ett äldre datum ersätter ett yngre datum. 
-
-# Vi behöver väl fakitskt också ha med region och butik, så att vi kan koppla vart första laddningen ska till.
+store_first_df = pd.DataFrame.from_dict(store_first, orient='index')
+region_first_df = pd.DataFrame.from_dict(region_first, orient="index")
+region_first_df.columns = ['Värde']
+print(region_first_df)

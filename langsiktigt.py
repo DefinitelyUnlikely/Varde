@@ -38,10 +38,12 @@ region_default = defaultdict(Counter)
 
 for i in cursor:
     paid = i.__getattribute__("Amount paid")
+    
     if i.Artikel in empty_cards:
         region_default[i.Region]['Tomma'] += paid
         store_default[i.Store]['Tomma'] += paid
         store_default[i.Store].setdefault('Region', i.Region)
+        
     if i.Artikel in preloaded_cards:
         region_default[i.Region]['Förladdade'] += paid
         store_default[i.Store]['Förladdade'] += paid
