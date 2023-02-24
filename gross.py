@@ -35,6 +35,8 @@ cursor.execute('SELECT Number, Store, Storecheck.Region, SIM_kort.Artikel FROM S
 store_default = defaultdict(Counter)
 region_default = defaultdict(Counter)
 for i in cursor:
+    store_default[i.Store]["Totalt"] += 1
+    region_default[i.Region]["Totalt"] += 1
     
     if i.Artikel in empty_cards:
         store_default[i.Store]["Tomma"] += 1
@@ -47,8 +49,8 @@ for i in cursor:
         region_default[i.Region]["Förladdade"] += 1
         
 
-store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Region']]
-region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade']]
+store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Totalt', 'Region']]
+region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade', 'Totalt']]
 
 print(region_gross_df)
 

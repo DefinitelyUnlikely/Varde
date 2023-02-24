@@ -74,7 +74,7 @@ class DatabaseAnalyzer():
             # Make columns wider, to make the excel file neater from the get go.
             for sheet in writer.sheets:
                 worksheet = writer.sheets[sheet]
-                worksheet.set_column('A:D', 40)
+                worksheet.set_column('A:E', 40)
             
                         
     def update_table(self):
@@ -127,6 +127,8 @@ class DatabaseAnalyzer():
 
             for i in self.cursor:
                 paid = i.__getattribute__("Amount paid")
+                region_default[i.Region]['Totalt'] += paid
+                store_default[i.Store]['Totalt'] += paid
                 
                 if i.Artikel in self.empty_cards:
                     region_default[i.Region]['Tomma'] += paid
@@ -138,8 +140,8 @@ class DatabaseAnalyzer():
                     store_default[i.Store]['Förladdade'] += paid
                     store_default[i.Store].setdefault('Region', i.Region)
                     
-            self.region_longterm_df = pd.DataFrame.from_dict(region_default, orient='index')[['Tomma', 'Förladdade']]
-            self.store_longterm_df = pd.DataFrame.from_dict(store_default, orient='index')[['Tomma', 'Förladdade', 'Region']]
+            self.region_longterm_df = pd.DataFrame.from_dict(region_default, orient='index')[['Tomma', 'Förladdade', 'Totalt']]
+            self.store_longterm_df = pd.DataFrame.from_dict(store_default, orient='index')[['Tomma', 'Förladdade', 'Totalt', 'Region']]
             
             
         def first_charge(self):
@@ -192,6 +194,8 @@ class DatabaseAnalyzer():
             store_default = defaultdict(Counter)
             region_default = defaultdict(Counter)
             for i in self.cursor:
+                store_default[i.Store]["Totalt"] += 1
+                region_default[i.Region]["Totalt"] += 1
                 
                 if i.Artikel in self.empty_cards:
                     store_default[i.Store]["Tomma"] += 1
@@ -204,8 +208,8 @@ class DatabaseAnalyzer():
                     region_default[i.Region]["Förladdade"] += 1
                     
 
-            self.store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Region']]
-            self.region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade']]
+            self.store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Totalt', 'Region']]
+            self.region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade', 'Totalt']]
                 
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):
