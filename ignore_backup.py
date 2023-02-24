@@ -285,7 +285,7 @@ to_cal.place(x=320, y=50)
 instructionsText = """
 1. Om programmet inte fungerar, behöver man mest troligt installera
 en driver. För Windows: https://www.microsoft.com/en-US/download/details.aspx?id=13255
-Om man använder UNIX (MacOS/Linux) 
+Programmet behöver använda MS Access och saknar därmed drivers för UNIX/MacOS. 
 """
 instructionsLabel = tk.Label(instructions, bg='gray20', fg='white', text=instructionsText)
 instructionsLabel.place(x=50, y=50)

@@ -63,8 +63,18 @@ class DatabaseAnalyzer():
         # As we want multiple sheets, I need to create an excel writer.
         file = filedialog.asksaveasfilename(defaultextension=".xlsx")
         with pd.ExcelWriter(file) as writer:
-            pass
-                
+            self.region_longterm_df.to_excel(writer, sheet_name="Långsiktigt Region")
+            self.region_first_df.to_excel(writer, sheet_name="Första laddning Region")
+            self.region_gross_df.to_excel(writer, sheet_name="Gross Region")
+            
+            self.store_longterm_df.to_excel(writer, sheet_name="Långsiktigt Butiker")
+            self.store_first_df.to_excel(writer, sheet_name="Första laddning Butiker")
+            self.store_gross_df.to_excel(writer, sheet_name="Gross Butiker")
+            
+            # Make columns wider, to make the excel file neater from the get go.
+            for sheet in writer.sheets:
+                worksheet = writer.sheets[sheet]
+                worksheet.set_column('A:D', 40)
             
                         
     def update_table(self):
@@ -205,9 +215,7 @@ class DatabaseAnalyzer():
         longterm(self)
         first_charge(self)
         gross_adds(self)
-        print(self.longterm_regions)
-        print("Totalt:" + str(self.longterm_regions.sum()))
-        
+
         doneLabel = tk.Label(text="Klar med kalkyl")
         doneLabel.place(x=50, y=350)
         
@@ -274,7 +282,9 @@ to_cal.place(x=320, y=50)
 instructionsText = """
 1. Om programmet inte fungerar, behöver man mest troligt installera
 en driver. För Windows: https://www.microsoft.com/en-US/download/details.aspx?id=13255
-Om man använder UNIX (MacOS/Linux) 
+Programmet behöver använda MS Access och saknar därmed drivers för UNIX/MacOS. 
+
+2. Ladda ner en kopia av databasen från Workshops VPN. 
 """
 instructionsLabel = tk.Label(instructions, bg='gray20', fg='white', text=instructionsText)
 instructionsLabel.place(x=50, y=50)
