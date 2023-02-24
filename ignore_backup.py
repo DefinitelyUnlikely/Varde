@@ -5,7 +5,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import csv
 from tkcalendar import Calendar
-from collections import Counter, defaultdict
+from collections import Counter
 import pandas as pd
 
 
@@ -20,11 +20,11 @@ class DatabaseAnalyzer():
     
         self.empty_cards = {'TA81218 - Telenor Prepaid TripleSIM 0kr', 'TA81258 - Telenor Prepaid TripleSIM 0kr (till 25-pack)'}
         self.preloaded_cards = {
-            'TA81228 - Telenor Prepaid TripleSIM Fast 1 månad Mini',
-            'TA81259 - Telenor MBB 100 GB 1 år',
-            'TA81220 - Telenor Prepaid TripleSIM Fast 1 månad',
+            'TA81228 - Telenor Prepaid TripleSIM Fast 1 m�nad Mini',
+            'TA81259 - Telenor MBB 100 GB 1 �r',
+            'TA81220 - Telenor Prepaid TripleSIM Fast 1 m�nad',
             'TA81235 - Telenor Prepaid MBB 10Gb',
-            'TA81230 - Telenor Prepaid TripleSIM Halvår',
+            'TA81230 - Telenor Prepaid TripleSIM Halv�r',
             'TA81247 - Prepaid Startpaket HELLO',
                     }
         self.volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
@@ -63,7 +63,18 @@ class DatabaseAnalyzer():
         # As we want multiple sheets, I need to create an excel writer.
         file = filedialog.asksaveasfilename(defaultextension=".xlsx")
         with pd.ExcelWriter(file) as writer:
-            pass
+            self.longterm_regions.to_excel(writer, sheet_name="Långsiktigt Region")
+            self.first_region_df.to_excel(writer, sheet_name="Första laddning Region")
+            self.gross_regions_df.to_excel(writer, sheet_name="Gross Region")
+            
+            self.longterm_stores.to_excel(writer, sheet_name="Långsiktigt Butiker")
+            self.store_first_df.to_excel(writer, sheet_name="Första laddning Butiker")
+            self.gross_stores_df.to_excel(writer, sheet_name="Gross Butiker")
+            
+            # Make columns wider, to make the excel file neater from the get go.
+            for sheet in writer.sheets:
+                worksheet = writer.sheets[sheet]
+                worksheet.set_column('A:C', 40)
                 
             
                         
@@ -111,24 +122,23 @@ class DatabaseAnalyzer():
             f'AND Activated between #{one_year_earlier}# and #{to_cal.get_date()}# '
             )     
 
-            region_default = defaultdict(Counter)
-            store_default = defaultdict(Counter)
+            region_map = Counter()
+            region_preloaded_map = Counter()
+            store_map = Counter()
+            store_preloaded_map = Counter()
             
-
             for i in self.cursor:
-                paid = i.__getattribute__("Amount paid")
-                if i.Artikel in self.empty_cards:
-                    region_default[i.Region]['Tomma'] += paid
-                    store_default[i.Store]['Tomma'] += paid
-                    store_default[i.Store].setdefault('Region', i.Region)
-                
+                paid = i.__getattribute__('Amount paid')
+                region_map[i.Region] += paid
+                store_map[i.Store] += paid
                 if i.Artikel in self.preloaded_cards:
-                    region_default[i.Region]['Förladdade'] += paid
-                    store_default[i.Store]['Förladdade'] += paid
-                    store_default[i.Store].setdefault('Region', i.Region)
+                    region_preloaded_map[i.Region] += paid
+                    store_preloaded_map[i.Store] += paid
                     
-            self.region_longterm = pd.DataFrame.from_dict(region_default, orient='index')[['Tomma', 'Förladdade']]
-            self.store_longterm = pd.DataFrame.from_dict(store_default, orient='index')[['Tomma', 'Förladdade', 'Region']]
+            self.longterm_regions = pd.DataFrame.from_dict(region_map, orient='index')
+            self.longterm_stores = pd.DataFrame.from_dict(store_map, orient="index")
+            self.longterm_pre_regions = pd.DataFrame.from_dict(region_preloaded_map, orient="index")
+            self.longterm_pre_stores = pd.DataFrame.from_dict(store_preloaded_map, orient="index")
             
             
         def first_charge(self):
@@ -142,21 +152,37 @@ class DatabaseAnalyzer():
             
             first_dict = {}
             for i in self.cursor:
-                first_dict.update({i.Number:
-                    {"Region": i.Region, "Store": i.Store, "Activated": i.Activated, "Date": "N/A", "Amount": 0, "Article": i.Artikel}})
+                first_dict.update({i.Number: {"Region": i.Region, "Store": i.Store, "Activated": i.Activated, "Date": "N/A", "Amount": 0, "Article": i.Artikel}})
             
             
-            day_before_from_date = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(days=1)
+            day_before_from = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(days=1)
             
             self.cursor.execute('SELECT MSISDN, "Topup date", "Amount paid" FROM Laddningsdata '
-                                f'WHERE "Topup date" between #{day_before_from_date}# and #{to_cal.get_date()}#')
+                                f'WHERE "Topup date" between #{day_before_from}# and #{to_cal.get_date()}#')
             
             for i in self.cursor:
                 if i.MSISDN in first_dict:
-                    if first_dict[i.MSISDN]["Date"] == "N/A" or first_dict[i.MSISDN]["Date"] > i.__getattribute__('Topup date'):
+                    if first_dict[i.MSISDN]["Date"] == "N/A" or first_dict[i[0]]["Date"] > i[1]:
                         first_dict[i.MSISDN]["Date"] = i.__getattribute__('Topup date')
                         first_dict[i.MSISDN]["Amount"] = i.__getattribute__('Amount paid')
+            
+            region_first = Counter()
+            store_first = Counter()
+            region_first_pre = Counter()
+            store_first_pre = Counter()
+            for i in first_dict.values():
+                region_first[i["Region"]] += i["Amount"]
+                store_first[i["Store"]] += i["Amount"]
+                if i["Article"] in self.preloaded_cards:
+                    region_first_pre[i["Region"]] += i["Amount"]
+                    store_first_pre[i["Store"]] += i["Amount"]
                     
+                
+            self.first_region_df = pd.DataFrame.from_dict(region_first, orient="index")   
+            self.store_first_df = pd.DataFrame.from_dict(store_first, orient="index")
+            self.region_first_pre_df = pd.DataFrame.from_dict(region_first_pre, orient="index")
+            self.store_first_pre_df = pd.DataFrame.from_dict(store_first_pre, orient="index")
+            
         
         def gross_adds(self):
             """
