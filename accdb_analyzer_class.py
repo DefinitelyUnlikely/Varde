@@ -9,9 +9,6 @@ from collections import Counter, defaultdict
 import pandas as pd
 
 
-
-# TODO: I now want to put the prepaid cards into the same df's that I export, so that I get everything into one sheet / per thing. 
-
 class DatabaseAnalyzer():
     
     
@@ -87,6 +84,7 @@ class DatabaseAnalyzer():
         startLabel.place(x=50, y=320)
         startLabel.update_idletasks()
         
+        # self.cursor.execute('DROP TABLE Updated_Store') # This is needed if the databas already has been used. 
         self.cursor.execute('CREATE TABLE Updated_Store (MSISDN INTEGER, Region TEXT(100), Activated DATE, Store TEXT(255))')
 
         with open(self.csv_path, "r") as csvfile:
