@@ -43,7 +43,7 @@ for i in cursor:
         store_default[i.Store].setdefault("Region", i.Region)
         region_default[i.Region]["Tomma"] += 1
 
-    if i.Artikel in preloaded_cards:
+    elif i.Artikel in preloaded_cards:
         store_default[i.Store]["Förladdade"] += 1
         store_default[i.Store].setdefault("Region", i.Region)
         region_default[i.Region]["Förladdade"] += 1
@@ -53,6 +53,3 @@ store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma',
 region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade', 'Totalt']]
 
 print(region_gross_df)
-
-# Hur löser jag gross? I det fallet är det väl absolut bäst att bara göra en query mot Storecheck
-# Där vi tar ut alla aktiveringar inom tidsramen. Sedan delar vi upp det till regionerna.

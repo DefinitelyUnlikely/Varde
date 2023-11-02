@@ -67,6 +67,8 @@ class DatabaseAnalyzer():
             self.store_longterm_df.to_excel(writer, sheet_name="Långsiktigt Butiker")
             self.store_first_df.to_excel(writer, sheet_name="Första laddning Butiker")
             self.store_gross_df.to_excel(writer, sheet_name="Gross Butiker")
+            
+            #TODO: See to that the renaming actually works. It didn't for some reason.
                        
             self.merged_long_df = pd.merge(self.store_gross_df, self.store_longterm_df, on="Butik", how="inner")
             
@@ -143,7 +145,7 @@ class DatabaseAnalyzer():
                         store_default[i.Store]['Tomma'] += paid
                         store_default[i.Store].setdefault('Region', i.Region)
                     
-                    if i.Artikel in self.preloaded_cards:
+                    elif i.Artikel in self.preloaded_cards:
                         region_default[i.Region]['Förladdade'] += paid
                         store_default[i.Store]['Förladdade'] += paid
                         store_default[i.Store].setdefault('Region', i.Region)
@@ -215,7 +217,7 @@ class DatabaseAnalyzer():
                     store_default[i.Store].setdefault("Region", i.Region)
                     region_default[i.Region]["Tomma"] += 1
 
-                if i.Artikel in self.preloaded_cards:
+                elif i.Artikel in self.preloaded_cards:
                     store_default[i.Store]["Förladdade"] += 1
                     store_default[i.Store].setdefault("Region", i.Region)
                     region_default[i.Region]["Förladdade"] += 1

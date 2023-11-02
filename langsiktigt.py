@@ -88,4 +88,4 @@ region_gross_df.index.name = "Region"
 merged = pd.merge(store_gross_df, store_longterm,  on="Butik", how="inner")
 
 
-print(merged["Tomma_x"])
+print(merged)
