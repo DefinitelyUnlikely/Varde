@@ -1,0 +1,9 @@
+Jag behöver iterera hela databasens tabell vid namn SIM_Kort. 
+Där behöver jag:
+1. hämta ut alla artiklar som jag hittar
+2. lägga lla nummer som saknar artikel i en lista. Som jag skriver ut.
+
+Om detta inte ger något, behöver jag:
+1. lägga alla nummer som inte har en artikel från artikel listan jag har i accdb_analazyer_class.py 
+i en lista som jag skriver ut
+

@@ -67,6 +67,16 @@ class DatabaseAnalyzer():
             self.store_longterm_df.to_excel(writer, sheet_name="Långsiktigt Butiker")
             self.store_first_df.to_excel(writer, sheet_name="Första laddning Butiker")
             self.store_gross_df.to_excel(writer, sheet_name="Gross Butiker")
+                       
+            self.merged_long_df = pd.merge(self.store_gross_df, self.store_longterm_df, on="Butik", how="inner")
+            
+            self.merged_long_empty_df = self.merged_long_df[["Tomma_x", "Tomma_y", "Region_x"]]
+            self.merged_long_empty_df.rename(columns={"Tomma_x": "Gross", "Tomma_y": "Värde"})
+            self.merged_long_empty_df.to_excel(writer, sheet_name="Butiker Kombo Tomma")
+            
+            self.merged_long_loaded_df = self.merged_long_df[["Förladdade_x", "Förladdade_y", "Region_x"]]
+            self.merged_long_loaded_df.rename(columns={"Förladdade_x": "Gross", "Förladdade_y": "Värde"})
+            self.merged_long_loaded_df.to_excel(writer, sheet_name="Butiker Kombo Förladdade")
             
             # Make columns wider, to make the excel file neater from the get go.
             for sheet in writer.sheets:
@@ -122,24 +132,26 @@ class DatabaseAnalyzer():
             region_default = defaultdict(Counter)
             store_default = defaultdict(Counter)
             
-
             for i in self.cursor:
                 paid = i.__getattribute__("Amount paid")
-                region_default[i.Region]['Totalt'] += paid
-                store_default[i.Store]['Totalt'] += paid
-                
-                if i.Artikel in self.empty_cards:
-                    region_default[i.Region]['Tomma'] += paid
-                    store_default[i.Store]['Tomma'] += paid
-                    store_default[i.Store].setdefault('Region', i.Region)
-                
-                if i.Artikel in self.preloaded_cards:
-                    region_default[i.Region]['Förladdade'] += paid
-                    store_default[i.Store]['Förladdade'] += paid
-                    store_default[i.Store].setdefault('Region', i.Region)
+                if isinstance(paid, (float, int)):
+                    region_default[i.Region]['Totalt'] += paid
+                    store_default[i.Store]['Totalt'] += paid
                     
-            self.region_longterm_df = pd.DataFrame.from_dict(region_default, orient='index')[['Tomma', 'Förladdade', 'Totalt']]
+                    if i.Artikel in self.empty_cards:
+                        region_default[i.Region]['Tomma'] += paid
+                        store_default[i.Store]['Tomma'] += paid
+                        store_default[i.Store].setdefault('Region', i.Region)
+                    
+                    if i.Artikel in self.preloaded_cards:
+                        region_default[i.Region]['Förladdade'] += paid
+                        store_default[i.Store]['Förladdade'] += paid
+                        store_default[i.Store].setdefault('Region', i.Region)
+                    
             self.store_longterm_df = pd.DataFrame.from_dict(store_default, orient='index')[['Tomma', 'Förladdade', 'Totalt', 'Region']]
+            self.store_longterm_df.index.name = "Butik"
+            self.region_longterm_df = pd.DataFrame.from_dict(region_default, orient='index')[['Tomma', 'Förladdade', 'Totalt']]
+            self.region_longterm_df.index.name = "Region"
             
             
         def first_charge(self):
@@ -171,16 +183,19 @@ class DatabaseAnalyzer():
             region_first = Counter()
             store_first = defaultdict(dict)
             for number in first_dict.values():
-                region_first[number["Region"]] += number["Amount"]
-                store_first[number["Store"]].setdefault("Region", number["Region"])
-                store_first[number["Store"]].setdefault("Värde", 0)
-                store_first[number["Store"]]["Värde"] += number["Amount"]
+                if isinstance(number["Amount"], (float, int)):
+                    region_first[number["Region"]] += number["Amount"]
+                    store_first[number["Store"]].setdefault("Region", number["Region"])
+                    store_first[number["Store"]].setdefault("Värde", 0)
+                    store_first[number["Store"]]["Värde"] += number["Amount"]
                 
             self.store_first_df = pd.DataFrame.from_dict(store_first, orient="index")[['Värde', 'Region']]
+            self.store_first_df.index.name = "Butik"
             self.region_first_df = pd.DataFrame.from_dict(region_first, orient="index")
             self.region_first_df.columns = ['Värde']
+            self.region_first_df.index.name = "Region"
+            
                     
-        
         def gross_adds(self):
             """
             Calculates the amount of added RGUs for a given period.
@@ -207,8 +222,10 @@ class DatabaseAnalyzer():
                     
 
             self.store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Totalt', 'Region']]
+            self.store_gross_df.index.name = "Butik"
             self.region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade', 'Totalt']]
-                
+            self.region_gross_df.index.name = "Region"   
+             
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):
             self.update_table()
