@@ -1,9 +1,9 @@
-Jag behöver iterera hela databasens tabell vid namn SIM_Kort. 
-Där behöver jag:
-1. hämta ut alla artiklar som jag hittar
-2. lägga lla nummer som saknar artikel i en lista. Som jag skriver ut.
+I SIM_Kort är alla kort markerade med artikel.
 
-Om detta inte ger något, behöver jag:
-1. lägga alla nummer som inte har en artikel från artikel listan jag har i accdb_analazyer_class.py 
-i en lista som jag skriver ut
+Möjliga problem? Att numret i Storecheck inte hittar en match i SIM_Kort.
+Detta sker antingen för att alla kort inte finns i SIM_Kort eller för att
+något annat sker. Jag ser ju vissa (men det är typ 10st) som i tabellen Storecheck
+har en 1 framför resterande siffror. Dessa verkar inte finnas i SIM_Kort. 
 
+Det jag behöver göra nu är att när jag går igenom grossen; Om ett kort varken återfinns 
+i empty, preloaded eller volvo, lägg dem i en lista. Printa sedan den listan.

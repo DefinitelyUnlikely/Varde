@@ -24,30 +24,12 @@ preloaded_cards = {
 volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
 
 conn = pyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-                      r'DBQ=C:\Code\Projects\Master.accdb;'
+                      r'DBQ=C:\Code\Projects\dbbnov8.accdb;'
                       )
 
 
 cursor = conn.cursor()
 
-cursor.execute("SELECT * FROM SIM_Kort")
+cursor.execute("SELECT * FROM SIM_Kort WHERE Artikel = NULL;")
 
-x = 0
-y = 0
-z = 0
-for i in cursor:
-    if i.Artikel in empty_cards:
-        x += 1
-    if i.Artikel in preloaded_cards:
-        y += 1
-    if i.Artikel in volvo_cards:
-        z += 1
-        
-print(x, y, z)
-print(x + y + z)       
-# totalt 1019890 när man kör alla kort
-
-# totalt 550099 när man kör alla tomma
-# totalt 457172 när man kör alla pre
-# totalt 12619 när man kör alla volvo
-# som har summan 1019890. Det betyder att inga kort saknar artikel.
+print(cursor.fetchall())

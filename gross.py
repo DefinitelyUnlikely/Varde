@@ -9,12 +9,12 @@ from openpyxl import load_workbook, Workbook
 
 conn = pyodbc.connect(
 r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-r'DBQ=C:\Code\Projects\master_feb.accdb;'
+r'DBQ=C:\Code\Projects\Master.accdb;'
 )
 cursor = conn.cursor()
 
-from_date = datetime.date(2022, 9, 1)
-to_date = datetime.date(2022, 9, 30)
+from_date = datetime.date(2023, 9, 1)
+to_date = datetime.date(2023, 9, 30)
 
 empty_cards = {'TA81218 - Telenor Prepaid TripleSIM 0kr', 'TA81258 - Telenor Prepaid TripleSIM 0kr (till 25-pack)'}
 preloaded_cards = {'TA81228 - Telenor Prepaid TripleSIM Fast 1 månad Mini',
@@ -34,6 +34,7 @@ cursor.execute('SELECT Number, Store, Storecheck.Region, SIM_kort.Artikel FROM S
 
 store_default = defaultdict(Counter)
 region_default = defaultdict(Counter)
+missing = 0
 for i in cursor:
     store_default[i.Store]["Totalt"] += 1
     region_default[i.Region]["Totalt"] += 1
@@ -48,8 +49,13 @@ for i in cursor:
         store_default[i.Store].setdefault("Region", i.Region)
         region_default[i.Region]["Förladdade"] += 1
         
+    
+    elif i.Artikel not in volvo_cards:
+        print(i)
+        missing += 1
 
+print(missing)
 store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Totalt', 'Region']]
 region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade', 'Totalt']]
 
-print(region_gross_df)
+
