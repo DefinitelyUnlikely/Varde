@@ -30,6 +30,10 @@ conn = pyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
 
 cursor = conn.cursor()
 
-cursor.execute("SELECT * FROM SIM_Kort WHERE Artikel = NULL;")
+cursor.execute("SELECT DISTINCT Store, Chain FROM Storecheck;")
 
-print(cursor.fetchall())
+list_of_stores = cursor.fetchall()
+
+df = pd.DataFrame.from_records(list_of_stores, columns=['Butik', 'Kedja'], index=['Butik'])
+
+print(df)

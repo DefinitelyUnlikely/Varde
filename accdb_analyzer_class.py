@@ -57,16 +57,8 @@ class DatabaseAnalyzer():
         
 
     def export_to_excel(self):
-        # As we want multiple sheets, I need to create an excel writer.
-        file = filedialog.asksaveasfilename(defaultextension=".xlsx")
-        with pd.ExcelWriter(file) as writer:
-            self.region_longterm_df.to_excel(writer, sheet_name="Långsiktigt Region")
-            self.region_first_df.to_excel(writer, sheet_name="Första laddning Region")
-            self.region_gross_df.to_excel(writer, sheet_name="Gross Region")
-            
-            self.store_longterm_df.to_excel(writer, sheet_name="Långsiktigt Butiker")
-            self.store_first_df.to_excel(writer, sheet_name="Första laddning Butiker")
-            self.store_gross_df.to_excel(writer, sheet_name="Gross Butiker")
+        
+        def merge_gross_and_value(self):
             
             #TODO: See to that the renaming actually works. Columns still named Tomma_x etc. 
                        
@@ -80,10 +72,40 @@ class DatabaseAnalyzer():
             self.merged_long_loaded_df.rename(columns={"Förladdade_x": "Gross", "Förladdade_y": "Värde"})
             self.merged_long_loaded_df.to_excel(writer, sheet_name="Butiker Kombo Förladdade")
             
+        def merge_with_chain(self):
+            
+            # Creating a dataframe with stores and chains.
+            self.cursor.execute('SELECT DISTINCT Store, Chain FROM Storecheck ')
+            data = self.cursor.fetchall()
+            self.store_chain_df = pd.DataFrame.from_records(data, columns=['Butik', 'Kedja'], index=['Butik'])
+            
+            # Merging with existing dataframes
+            # self.merged_long_df = pd.merge(self.store_gross_df, self.store_longterm_df, on="Butik", how="inner")
+
+            self.store_longterm_df = pd.merge(self.store_longterm_df,self.store_chain_df, on="Butik", how="inner")
+            self.store_first_df = pd.merge(self.store_first_df, self.store_chain_df, on="Butik", how="inner")
+            self.store_gross_df = pd.merge(self.store_gross_df, self.store_chain_df, on="Butik", how="inner")
+                    
+        # First, Merge with chain info
+        merge_with_chain(self)
+        
+        # As we want multiple sheets, I need to create an excel writer.
+        file = filedialog.asksaveasfilename(defaultextension=".xlsx")
+        with pd.ExcelWriter(file) as writer:
+            self.region_longterm_df.to_excel(writer, sheet_name="Långsiktigt Region")
+            self.region_first_df.to_excel(writer, sheet_name="Första laddning Region")
+            self.region_gross_df.to_excel(writer, sheet_name="Gross Region")
+            
+            self.store_longterm_df.to_excel(writer, sheet_name="Långsiktigt Butiker")
+            self.store_first_df.to_excel(writer, sheet_name="Första laddning Butiker")
+            self.store_gross_df.to_excel(writer, sheet_name="Gross Butiker")
+              
+            merge_gross_and_value(self)
+                 
             # Make columns wider, to make the excel file neater from the get go.
             for sheet in writer.sheets:
                 worksheet = writer.sheets[sheet]
-                worksheet.set_column('A:E', 40)
+                worksheet.set_column('A:G', 40)
             
                         
     def update_table(self):

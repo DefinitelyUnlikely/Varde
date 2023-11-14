@@ -119,7 +119,11 @@ class DatabaseAnalyzer():
     def calculate_option(self):     
         
         def longterm(self): 
-                    
+            
+            # TODO: Add a way to check how many unique numbers are still in use. 
+            # How to do that? Perhaps it's better to do this in first charge, that already uses a dict where one could add something like
+            # latest topup date.
+            
             # Start by making sure the right table is in our cursor, before iterating.
             one_year_earlier = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(years=1)
             

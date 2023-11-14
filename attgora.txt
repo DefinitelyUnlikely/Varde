@@ -1,9 +1,9 @@
-I SIM_Kort är alla kort markerade med artikel.
+Nu vill jag göra lite olika saker
 
-Möjliga problem? Att numret i Storecheck inte hittar en match i SIM_Kort.
-Detta sker antingen för att alla kort inte finns i SIM_Kort eller för att
-något annat sker. Jag ser ju vissa (men det är typ 10st) som i tabellen Storecheck
-har en 1 framför resterande siffror. Dessa verkar inte finnas i SIM_Kort. 
+1. jag vill lägga till kedja i listan. Jag vill nog ha den i alla utom de som är för regionerna.
+ Hur gör jag det bäst? Kedjan är med i Storecheck tabellen. SÅ jag kan ju hämta ut den. 
+ Alternativt gör vi en dataframe med alla butiker och dess kedja och så gör vi en merge.
 
-Det jag behöver göra nu är att när jag går igenom grossen; Om ett kort varken återfinns 
-i empty, preloaded eller volvo, lägg dem i en lista. Printa sedan den listan.
+ Jag tror alternativ 2 är enklare, då alternativ 1 innebär att jag måste göra om min defaultdict från att vara counter till
+ något annat. Antagligen en dict där jag hade behövt skapa en counter och en region för varje enskild. Enklare att bara hämta ut regionerna
+ och merge:a med pandas. Då är det också separat och enklare att felsöka.
