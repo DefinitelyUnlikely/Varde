@@ -23,6 +23,7 @@ class DatabaseAnalyzer():
             'TA81235 - Telenor Prepaid MBB 10Gb',
             'TA81230 - Telenor Prepaid TripleSIM Halvår',
             'TA81247 - Prepaid Startpaket HELLO',
+            'TA81259 - Telenor prepaid MBB 10GB Arlo',
                     }
         self.volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
     
@@ -57,6 +58,40 @@ class DatabaseAnalyzer():
         
 
     def export_to_excel(self):
+        
+        def merge_gross_and_value(self):
+            
+            #TODO: See to that the renaming actually works. Columns still named Tomma_x etc. 
+                       
+            self.merged_long_df = pd.merge(self.store_gross_df, self.store_longterm_df, on="Butik", how="inner")
+            
+            self.merged_long_empty_df = self.merged_long_df[["Tomma_x", "Tomma_y", "Region_x", "Kedja_x"]]
+            self.merged_long_empty_df= self.merged_long_empty_df.rename(columns={"Tomma_x": "Gross", "Tomma_y": "Värde"})
+            self.merged_long_empty_df.to_excel(writer, sheet_name="Butiker Kombo Tomma")
+            
+            self.merged_long_loaded_df = self.merged_long_df[["Förladdade_x", "Förladdade_y", "Region_x", "Kedja_x"]]
+            self.merged_long_loaded_df = self.merged_long_loaded_df.rename(columns={"Förladdade_x": "Gross", "Förladdade_y": "Värde"})
+            self.merged_long_loaded_df.to_excel(writer, sheet_name="Butiker Kombo Förladdade")
+            
+        def merge_with_chain(self):
+            
+            # Creating a dataframe with stores and chains.
+            # This does create duplicates for stores that has had their chain changed. Not merging with chains
+            # removes the duplicates but is pointless, as we wanted the chains as well.
+            self.cursor.execute('SELECT DISTINCT Store, Chain FROM Storecheck ')
+            data = self.cursor.fetchall()
+            self.store_chain_df = pd.DataFrame.from_records(data, columns=['Butik', 'Kedja'], index=['Butik'])
+            
+            # Merging with existing dataframes
+            # self.merged_long_df = pd.merge(self.store_gross_df, self.store_longterm_df, on="Butik", how="inner")
+
+            self.store_longterm_df = pd.merge(self.store_longterm_df,self.store_chain_df, on="Butik", how="inner")
+            self.store_first_df = pd.merge(self.store_first_df, self.store_chain_df, on="Butik", how="inner")
+            self.store_gross_df = pd.merge(self.store_gross_df, self.store_chain_df, on="Butik", how="inner")
+                    
+        # First, Merge with chain info
+        merge_with_chain(self)
+        
         # As we want multiple sheets, I need to create an excel writer.
         file = filedialog.asksaveasfilename(defaultextension=".xlsx")
         with pd.ExcelWriter(file) as writer:
@@ -67,23 +102,13 @@ class DatabaseAnalyzer():
             self.store_longterm_df.to_excel(writer, sheet_name="Långsiktigt Butiker")
             self.store_first_df.to_excel(writer, sheet_name="Första laddning Butiker")
             self.store_gross_df.to_excel(writer, sheet_name="Gross Butiker")
-            
-            #TODO: See to that the renaming actually works. Columns still named Tomma_x etc. 
-                       
-            self.merged_long_df = pd.merge(self.store_gross_df, self.store_longterm_df, on="Butik", how="inner")
-            
-            self.merged_long_empty_df = self.merged_long_df[["Tomma_x", "Tomma_y", "Region_x"]]
-            self.merged_long_empty_df.rename(columns={"Tomma_x": "Gross", "Tomma_y": "Värde"})
-            self.merged_long_empty_df.to_excel(writer, sheet_name="Butiker Kombo Tomma")
-            
-            self.merged_long_loaded_df = self.merged_long_df[["Förladdade_x", "Förladdade_y", "Region_x"]]
-            self.merged_long_loaded_df.rename(columns={"Förladdade_x": "Gross", "Förladdade_y": "Värde"})
-            self.merged_long_loaded_df.to_excel(writer, sheet_name="Butiker Kombo Förladdade")
-            
+              
+            merge_gross_and_value(self)
+                 
             # Make columns wider, to make the excel file neater from the get go.
             for sheet in writer.sheets:
                 worksheet = writer.sheets[sheet]
-                worksheet.set_column('A:E', 40)
+                worksheet.set_column('A:G', 40)
             
                         
     def update_table(self):
@@ -119,11 +144,7 @@ class DatabaseAnalyzer():
     def calculate_option(self):     
         
         def longterm(self): 
-            
-            # TODO: Add a way to check how many unique numbers are still in use. 
-            # How to do that? Perhaps it's better to do this in first charge, that already uses a dict where one could add something like
-            # latest topup date.
-            
+                    
             # Start by making sure the right table is in our cursor, before iterating.
             one_year_earlier = datetime.datetime.strptime(from_cal.get_date(), r"%m/%d/%y") - relativedelta(years=1)
             
@@ -230,7 +251,14 @@ class DatabaseAnalyzer():
             self.store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Totalt', 'Region']]
             self.store_gross_df.index.name = "Butik"
             self.region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade', 'Totalt']]
-            self.region_gross_df.index.name = "Region"   
+            self.region_gross_df.index.name = "Region" 
+            
+        
+        def usage(self):
+            """
+            Goes through all numbers to see which ones are still in use. 
+            """
+            pass
              
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):

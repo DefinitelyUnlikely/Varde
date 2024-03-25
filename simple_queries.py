@@ -11,6 +11,10 @@ from openpyxl import load_workbook, Workbook
 # välja SIM_Kort tabellen. 
 # Gå över den tabellen, om artikel saknas, lägg till nummer i en lista?
 
+from_date = datetime.date(2023, 3, 1)
+to_date = datetime.date(2023, 3, 31)
+
+one_year_earlier = from_date - relativedelta(years=1)
 
 empty_cards = {'TA81218 - Telenor Prepaid TripleSIM 0kr', 'TA81258 - Telenor Prepaid TripleSIM 0kr (till 25-pack)'}
 preloaded_cards = {
@@ -20,20 +24,28 @@ preloaded_cards = {
             'TA81235 - Telenor Prepaid MBB 10Gb',
             'TA81230 - Telenor Prepaid TripleSIM Halvår',
             'TA81247 - Prepaid Startpaket HELLO',
+            'TA81259 - Telenor prepaid MBB 10GB Arlo',
                     }
 volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
 
 conn = pyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-                      r'DBQ=C:\Code\Projects\dbbnov8.accdb;'
+                      r'DBQ=C:\Code\MasterMars.accdb;'
                       )
 
 
 cursor = conn.cursor()
 
-cursor.execute("SELECT DISTINCT Store, Chain FROM Storecheck;")
+#Hämta all 
+cursor.execute(f'SELECT * FROM Laddningsdata WHERE "Topup date" between #{from_date}# and #{to_date}#;')
 
-list_of_stores = cursor.fetchall()
+# cursor.execute('SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
+            'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
+            'LEFT OUTER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+            f'WHERE "Topup date" between #{from_date}# and #{to_date}#'
+            f'AND Activated between #{one_year_earlier}# and #{to_date}# ')     
 
-df = pd.DataFrame.from_records(list_of_stores, columns=['Butik', 'Kedja'], index=['Butik'])
-
-print(df)
+total = 0
+for i in cursor.fetchall():
+       total += i.__getattribute__("Amount paid")
+       
+print(int(total))

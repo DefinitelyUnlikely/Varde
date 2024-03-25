@@ -1,9 +1,20 @@
-Nu vill jag göra lite olika saker
+Nu vill jag se över hur många kort som fortfarande används. 
 
-1. jag vill lägga till kedja i listan. Jag vill nog ha den i alla utom de som är för regionerna.
- Hur gör jag det bäst? Kedjan är med i Storecheck tabellen. SÅ jag kan ju hämta ut den. 
- Alternativt gör vi en dataframe med alla butiker och dess kedja och så gör vi en merge.
+Så först vill vi hämta, som vanligt, alla kort som blivit aktiverade inom tidsspannen. 
 
- Jag tror alternativ 2 är enklare, då alternativ 1 innebär att jag måste göra om min defaultdict från att vara counter till
- något annat. Antagligen en dict där jag hade behövt skapa en counter och en region för varje enskild. Enklare att bara hämta ut regionerna
- och merge:a med pandas. Då är det också separat och enklare att felsöka.
+Vill man göra det väldigt enkelt hade man då efter detta kunnat hämta laddningsdata för alla nummer
+en månad bakåt. Om kortet blivit påladdat den senaste månaden räknar vi det som aktivt. 
+
+Vi behöver också se till att vi inte får dubbleter när vi kollar kedjor. Då vi får unika kombos av butik + kedja får vi samma butik
+på flera rader i excel filen. De får alla samma mängd simkort (som är debn korrekta mängden) då det görs förre och det bara matchas
+mot den kombon baserat på butik.
+
+Det första vi bör göra är att lägga till en WHERE clause där vi ser till att enbart ta kort från storecheck som är aktiverade i rätt
+tidsram. Om vi då också uppdaterar för tidsramen vi kollar mot bör det inte bli dubbleter. Om det blir det ändå? Vilka lösningar kan jag komma på
+isåfall?
+
+Det sker i långsiktigt, gross och kombon.
+
+
+mer att göra? istället för att uppdatera databasen med en csv... Hämta csv:n, gör till en dataframe och uppdatera saker med pandas sedan? 
+För det tar en stund att uppdatera med SQL.

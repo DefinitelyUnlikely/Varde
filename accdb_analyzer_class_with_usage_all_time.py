@@ -23,6 +23,7 @@ class DatabaseAnalyzer():
             'TA81235 - Telenor Prepaid MBB 10Gb',
             'TA81230 - Telenor Prepaid TripleSIM Halvår',
             'TA81247 - Prepaid Startpaket HELLO',
+            'TA81259 - Telenor prepaid MBB 10GB Arlo',
                     }
         self.volvo_cards = {'TA81199 - Telenor MBB Volvo 5GB', }
     
@@ -65,7 +66,7 @@ class DatabaseAnalyzer():
             self.merged_long_df = pd.merge(self.store_gross_df, self.store_longterm_df, on="Butik", how="inner")
             
             self.merged_long_empty_df = self.merged_long_df[["Tomma_x", "Tomma_y", "Region_x", "Kedja_x"]]
-            self.merged_long_empty_df = self.merged_long_empty_df.rename(columns={"Tomma_x": "Gross", "Tomma_y": "Värde"})
+            self.merged_long_empty_df= self.merged_long_empty_df.rename(columns={"Tomma_x": "Gross", "Tomma_y": "Värde"})
             self.merged_long_empty_df.to_excel(writer, sheet_name="Butiker Kombo Tomma")
             
             self.merged_long_loaded_df = self.merged_long_df[["Förladdade_x", "Förladdade_y", "Region_x", "Kedja_x"]]
@@ -75,6 +76,8 @@ class DatabaseAnalyzer():
         def merge_with_chain(self):
             
             # Creating a dataframe with stores and chains.
+            # This does create duplicates for stores that has had their chain changed. Not merging with chains
+            # removes the duplicates but is pointless, as we wanted the chains as well.
             self.cursor.execute('SELECT DISTINCT Store, Chain FROM Storecheck ')
             data = self.cursor.fetchall()
             self.store_chain_df = pd.DataFrame.from_records(data, columns=['Butik', 'Kedja'], index=['Butik'])
@@ -150,14 +153,15 @@ class DatabaseAnalyzer():
             'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
             'LEFT OUTER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
             f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
-            f'AND Activated between #{one_year_earlier}# and #{to_cal.get_date()}# '
             )     
 
             region_default = defaultdict(Counter)
             store_default = defaultdict(Counter)
             
+            total = 0
             for i in self.cursor:
                 paid = i.__getattribute__("Amount paid")
+                total += paid                
                 if isinstance(paid, (float, int)):
                     region_default[i.Region]['Totalt'] += paid
                     store_default[i.Store]['Totalt'] += paid
@@ -172,6 +176,8 @@ class DatabaseAnalyzer():
                         store_default[i.Store]['Förladdade'] += paid
                         store_default[i.Store].setdefault('Region', i.Region)
                     
+            print(total)
+            
             self.store_longterm_df = pd.DataFrame.from_dict(store_default, orient='index')[['Tomma', 'Förladdade', 'Totalt', 'Region']]
             self.store_longterm_df.index.name = "Butik"
             self.region_longterm_df = pd.DataFrame.from_dict(region_default, orient='index')[['Tomma', 'Förladdade', 'Totalt']]
@@ -248,7 +254,14 @@ class DatabaseAnalyzer():
             self.store_gross_df = pd.DataFrame.from_dict(store_default, orient="index")[['Tomma', 'Förladdade', 'Totalt', 'Region']]
             self.store_gross_df.index.name = "Butik"
             self.region_gross_df = pd.DataFrame.from_dict(region_default, orient="index")[['Tomma', 'Förladdade', 'Totalt']]
-            self.region_gross_df.index.name = "Region"   
+            self.region_gross_df.index.name = "Region" 
+            
+        
+        def usage(self):
+            """
+            Goes through all numbers to see which ones are still in use. 
+            """
+            pass
              
         # If the attribute exists, a csv has been imported for use and we create an updated table. 
         if hasattr(self, 'csv_path'):
