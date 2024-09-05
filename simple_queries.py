@@ -36,16 +36,12 @@ conn = pyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
 cursor = conn.cursor()
 
 #Hämta all 
-cursor.execute(f'SELECT * FROM Laddningsdata WHERE "Topup date" between #{from_date}# and #{to_date}#;')
+cursor.execute(f'SELECT * FROM MSysObjects;')
 
 # cursor.execute('SELECT Laddningsdata.MSISDN, Store, Storecheck.Region, Activated, "Topup date", Measure, "Amount paid", Artikel '
-            'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
-            'LEFT OUTER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
-            f'WHERE "Topup date" between #{from_date}# and #{to_date}#'
-            f'AND Activated between #{one_year_earlier}# and #{to_date}# ')     
+#            'FROM (Laddningsdata INNER JOIN Storecheck ON Laddningsdata.MSISDN=Storecheck.Number) '
+#            'LEFT OUTER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
+#            f'WHERE "Topup date" between #{from_date}# and #{to_date}#'
+#           f'AND Activated between #{one_year_earlier}# and #{to_date}# ')     
 
-total = 0
-for i in cursor.fetchall():
-       total += i.__getattribute__("Amount paid")
-       
-print(int(total))
+print(cursor.fetchall)

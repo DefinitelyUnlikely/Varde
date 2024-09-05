@@ -154,7 +154,11 @@ class DatabaseAnalyzer():
             'LEFT OUTER JOIN SIM_kort ON Laddningsdata.MSISDN=SIM_Kort.MSISDN '
             f'WHERE "Topup date" between #{from_cal.get_date()}# and #{to_cal.get_date()}#'
             f'AND Activated between #{one_year_earlier}# and #{to_cal.get_date()}# '
-            )     
+            )    
+            
+            # I need to add a condition to check for activation date, the SQL command simply lowers the amount of 
+            # numbers in the list to the maximum "allowed" by going one year back from the from_date. 
+            # i.e. checking that if a number was activated 15/10/23, it's no longer given top ups that's after 15/10/24.
 
             region_default = defaultdict(Counter)
             store_default = defaultdict(Counter)
